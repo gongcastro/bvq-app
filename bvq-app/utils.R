@@ -21,3 +21,15 @@ theme_bvq <- function() {
     theme_minimal() +
         theme(panel.grid.major = element_blank())
 }
+
+# get posterior expectations
+get_epreds <- function(x) {
+    stopifnot(is.brmsfit(x))
+
+    distinct_data <- distinct(x[["data"]], te, n_phon_std, lv_std)
+    nd <- expand(distinct_data, te, n_phon_std, lv_std, age_std = -1:1, exposure_std = -1:1)
+
+    epreds <- epred_rvars(x, nd, ndraws = 25, seed = 888, re_formula = ~1|te)
+
+    return(epreds)
+}

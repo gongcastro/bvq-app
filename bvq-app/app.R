@@ -3,6 +3,8 @@ library(bvqdev)
 library(dplyr)
 library(tidyr)
 library(ggplot2)
+library(brms)
+library(tidybayes)
 library(janitor)
 
 # load functions
@@ -15,6 +17,7 @@ options(ggplot.discrete.fill = clrs,
 
 # load data
 bvq <- get_bvq_data(update = FALSE)
+fit <- readRDS("./bvq-app/data/fit.rds")
 
 # Define UI for application that draws a histogram
 ui <- navbarPage(
