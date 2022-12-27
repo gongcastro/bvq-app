@@ -1,0 +1,22 @@
+Package: bvq-app
+Title: "Shiny App to consult and visualise the Barcelona Vocabulary Questionnaire database"
+Version: 0.0.0.9000
+Authors@R: c(person("Gonzalo", "Garcia-Castro", email = "gonzalogarciadecastro@upf.edu", role = c("aut", "cre")))
+Description: "Shiny App to consult and visualise the Barcelona Vocabulary Questionnaire database"
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Imports:
+    shiny,
+    bvqdev,
+    usethis,
+    dplyr,
+    tidyr,
+    stringr,
+    janitor,
+    ggplot2,
+    arrow,
+    scales
+RoxygenNote: 7.0.2
+Remotes:
+  gongcastro/bvqdev
