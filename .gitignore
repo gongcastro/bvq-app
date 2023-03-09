@@ -37,8 +37,12 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+# data and results
 bvq-app/data/
 results/posterior/csv/*.csv
 results/predictions/parquet/*.parquet
 results/fits/*.rds
 data/
+_targets/
+
