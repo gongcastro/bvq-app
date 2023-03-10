@@ -1,5 +1,3 @@
-
-
 server <- function(input, output) {
     
     output$responses_age_plot <- renderPlot({
@@ -29,6 +27,114 @@ server <- function(input, output) {
             geom_line(aes(group = lp), linewidth = 1) +
             scale_colour_manual(values = clrs[c(1, 4, 5)])
     }, res = 100)
+    
+    output$items_plot_n_phon <- renderPlot({
+        items %>%
+            left_join(distinct(bvq$pool, te, label, semantic_category, class),
+                      multiple = "first",
+                      by = join_by(te)) |> 
+            filter(between(lv, input$items_lv[1], input$items_lv[2]),
+                   class %in% input$items_class,
+                   semantic_category %in% input$items_semantic_category) |>
+            select(te, language, n_phon) |> 
+            add_count(language, name = "n_total") |> 
+            count(language, n_phon, n_total) |> 
+            ungroup() |> 
+            ggplot(aes(n_phon, n/n_total, fill = language)) +
+            facet_wrap(~ language) +
+            geom_col(colour = "white") +
+            geom_text(aes(label = n),
+                      position = position_nudge(y = 0.05),
+                      size = 2.5) +
+            labs(x = "Length (phonemes)",
+                 y = "Number of words",
+                 colour = "Language",
+                 fill = "Language") +
+            scale_colour_manual(values = clrs[c(1, 4)]) +
+            scale_fill_manual(values = clrs[c(1, 4)]) +
+            scale_x_continuous(breaks = 1:max(items$n_phon)) +
+            scale_y_continuous(labels = percent) +
+            theme(legend.position = "none")
+        
+    })
+    
+    output$items_plot_lv <- renderPlot({
+        items %>%
+            left_join(distinct(bvq$pool, te, label, semantic_category, class),
+                      multiple = "first",
+                      by = join_by(te)) |> 
+            filter(between(lv, input$items_lv[1], input$items_lv[2]),
+                   class %in% input$items_class,
+                   semantic_category %in% input$items_semantic_category) |>
+            select(te, lv) |> 
+            ggplot(aes(lv)) +
+            stat_slab(colour = "white",
+                      fill = clrs[2]) +
+            geom_rug(alpha = 0.5,
+                     colour = clrs[1]) +
+            labs(x = "Cognateness (Levenshtein similarity)",
+                 y = "Proportion of words") +
+            scale_x_continuous(labels = percent) +
+            scale_y_continuous(labels = percent) +
+            theme(legend.position = "none")
+        
+    })
+    
+    output$items_plot_class <- renderPlot({
+        items %>%
+            left_join(distinct(bvq$pool, te, label, semantic_category, class),
+                      multiple = "first",
+                      by = join_by(te)) |> 
+            filter(between(lv, input$items_lv[1], input$items_lv[2]),
+                   class %in% input$items_class,
+                   semantic_category %in% input$items_semantic_category) |>
+            select(te, class) |> 
+            add_count(name = "n_total") |>
+            count(class, n_total) |> 
+            ggplot(aes(class, n/n_total)) +
+            geom_col(colour = "white",
+                     fill = clrs[5]) +
+            geom_text(aes(label = n),
+                      position = position_nudge(y = 0.05),
+                      size = 2.5) +
+            labs(x = "Grammatical class",
+                 y = "Proportion of words") +
+            scale_y_continuous(labels = percent) +
+            theme(legend.position = "none",
+                  axis.title.x = element_blank())
+        
+    })
+    
+    output$items_plot_semantic_category <- renderPlot({
+        items %>%
+            left_join(distinct(bvq$pool, te, label, semantic_category, class),
+                      multiple = "first",
+                      by = join_by(te)) |> 
+            filter(between(lv, input$items_lv[1], input$items_lv[2]),
+                   class %in% input$items_class,
+                   semantic_category %in% input$items_semantic_category) |>
+            select(te, class, semantic_category) |> 
+            add_count(name = "n_total") |>
+            count(semantic_category, class, n_total) |> 
+            mutate(prop = n/n_total) |> 
+            ggplot(aes(prop, reorder(semantic_category, prop),
+                       fill = class)) +
+            geom_col(colour = "white") +
+            geom_text(aes(label = n),
+                      position = position_nudge(x = 0.01),
+                      size = 2.5) +
+            labs(y = "Semantic category",
+                 x = "Proportion of words") +
+            scale_x_continuous(labels = percent) +
+            scale_fill_manual(values = clrs[c(1, 3, 5)]) +
+            theme(legend.position = c(1, 0.25),
+                  legend.justification = c(1, 0),
+                  legend.title = element_blank(),
+                  panel.grid.major.x = element_line(colour = "grey",
+                                                    linetype = "dotted"),
+                  axis.title.y = element_blank())
+        
+    })
     
     output$items_table <- renderDT({
         items %>%
@@ -67,14 +173,64 @@ server <- function(input, output) {
     })
     # options = list(lengthMenu = c(5, 30, 50),
     #                pageLength = 30)
+    
+    
+    output$model_draws <- renderPlot({
+        posterior |> 
+            ggplot(aes(.value/4, .variable_name)) +
+            geom_vline(xintercept = 0,
+                       colour = "grey",
+                       linetype = "dotted") +
+            stat_slab(colour = "white",
+                      fill = clrs[1],
+                      linewidth = 0.75) +
+            stat_interval(position = position_nudge(y = -0.2),
+                          .width = c(0.95, 0.89, 0.67, 0.50),
+                          linewidth = 2) +
+            labs(x = "Posterior regression coefficient",
+                 y = "Predictor",
+                 colour = "Confidence level") +
+            scale_colour_manual(values = rev(clrs[c(2, 3, 4, 5)])) +
+            scale_x_continuous(labels = percent) +
+            theme(axis.title = element_blank(),
+                  legend.position = "top")
+    }, res = 100)
+    
+    output$trajectories_plot <- renderPlot({
+        predictions |> 
+            mutate(age = rescale_variable(age_std, 
+                                          mean(responses$age),
+                                          sd(responses$age))) |> 
+            filter(lp %in% input$predictions_lp,
+                   dominance %in% input$predictions_dominance,
+                   between(age, input$predictions_age[1], input$predictions_age[2]),
+                   .category %in% input$predictions_category) |> 
+            ggplot(aes(age, .value, colour = interaction(dominance, lp, sep = " - "))) +
+            facet_wrap(~ .category) +
+            {
+                if (input$predictions_uncertainty) {
+                    geom_line(aes(group =  interaction(.draw, dominance, lp, sep = " - ")),
+                              alpha = 1/20,
+                              linewidth = 1) 
+                }
+            } +
+            {
+                if (input$predictions_summary != "none") {
+                    stat_summary(geom = "line",
+                                 fun = input$predictions_summary,
+                                 linewidth = 1)
+                }
+            }+
+            labs(x = "Age (months)",
+                 y = "P(acquisition|model)",
+                 colour = "Dominance - LP") +
+            scale_colour_manual(values = rev(clrs[c(2, 3, 4, 5)])) +
+            scale_y_continuous(labels = percent) +
+            theme(legend.position = "top",
+                  legend.title = element_blank(),
+                  legend.key.width = unit(1, "cm"))
+    }, res = 100)
+    
 }
-
-
-output$responses_date_plot <- renderPlot({
-    posterior$draws |> 
-        ggplot(aes(.value, .variable_name)) +
-        geom_slab()
-        
-}, res = 100)
 
 

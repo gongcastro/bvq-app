@@ -1,16 +1,15 @@
 #' Get item data
 #'
 #' @param bvq_data A named list resulting from calling \code{get_bvq}
-#' @param childes A dataframe with lexical frequencies extracted from CHILDES, as returned by the \code{get_childes_frequencies}
 #' @param class A character vector indicating the word classes to be included in the resulting dataset. Takes "Adjective", "Noun" and/or "Verb" as values.
-get_items <- function(bvq_data, childes, .class = "Noun") {
+get_items <- function(bvq_data, .class = "Noun") {
     
     # check arguments
     classes_available <- c("Noun", "Verb", "Adjective")
-    if (!(.class %in% classes_available)) {
+    if (!all(.class %in% classes_available)) {
         cli_abort("class must be one of {classes_available}")
     }
-
+    
     # find TEs that have one word-form in each language
     duplicated_te <- bvq_data$pool$te[duplicated(bvq_data$pool$te)]
     
@@ -29,7 +28,7 @@ get_items <- function(bvq_data, childes, .class = "Noun") {
         add_count(te, name = "n_te") |> # get only items with one translation in each language
         filter(n_te == 2) |>
         distinct(language, te, item, label, xsampa, ipa, class, version)
-
+    
     # compute Levenshtein distances
     lv_df <- pool_tmp |> 
         pivot_wider(names_from = language, 
@@ -46,15 +45,7 @@ get_items <- function(bvq_data, childes, .class = "Noun") {
         drop_na(lv, list) |>
         mutate(n_phon = nchar(xsampa),
                item = str_remove(item, "cat_|spa_")) |>
-        select(
-            te,
-            language,
-            item,
-            ipa,
-            lv,
-            n_phon,
-            list
-        ) |>
+        select(te, language, item, ipa, lv, n_phon, list) |>
         arrange(te)
     
     # export to data folder

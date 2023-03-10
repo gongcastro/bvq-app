@@ -20,22 +20,22 @@ get_responses <- function(bvq_data, items, participants) {
         arrange(id, time)
     
     responses <- responses_tmp |> 
-        left_join(select(items, -list),
+        inner_join(select(items, -list),
                   by = join_by(language, item)) |> 
-        left_join(participants,
+        inner_join(participants,
                   by = join_by(id, time)) |>
         mutate(
             # code responses as factor
-            response = factor(
-                response,
-                levels = c(1, 2, 3),
-                labels = c("No", "Understands", "Understands and Says"),
-                ordered = TRUE
-            ),
+            response = factor(response,
+                              levels = c(1, 2, 3),
+                              labels = c("No", 
+                                         "Understands",
+                                         "Understands and Says"),
+                              ordered = TRUE),
             # does should have the value of the corresponding language
             doe = ifelse(language == "Catalan", doe_catalan, doe_spanish),
             # standardise numeric predictors
-            across(c(n_phon, lv, age, doe), 
+            across(c(lv, age, doe), 
                    \(x) scale(x)[, 1], 
                    .names = "{.col}_std"),
             dominance = ifelse(doe_catalan >= doe_spanish, "Catalan", "Spanish"),
@@ -43,22 +43,8 @@ get_responses <- function(bvq_data, items, participants) {
             across(c(lp, dominance), as.factor)
         ) |>
         # get only relevant variables
-        select(
-            id,
-            time,
-            age,
-            age_std,
-            te,
-            language,
-            item,
-            response,
-            lv,
-            lv_std,
-            lp,
-            dominance,
-            n_phon,
-            n_phon_std,
-        ) |>
+        select(id, time, age, age_std, te, language, item, response, 
+               lv, lv_std, lp, dominance) |>
         # reorder rows
         arrange(id, te, language)
     

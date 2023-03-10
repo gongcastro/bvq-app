@@ -21,7 +21,9 @@ theme_bvq <- function() {
                                         linetype = "dotted"))
 }
 
-Cairo()
+if (!interactive()) {
+    Cairo()
+}
 
 theme_set(theme_bvq())
 
@@ -34,9 +36,18 @@ options(ggplot.discrete.fill = clrs,
         shiny.usecairo = TRUE)
 
 # load data
-bvq <- readRDS("data/bvq.rds")
-items <- readRDS("data/items.rds")
-participants <- readRDS("data/participants.rds")
-fit <- readRDS("data/fit.rds")
-posterior <- readRDS("data/posterior.rds")
-predictions <- readRDS("data/predictions.rds")
+if (interactive()) {
+    # bvq <- readRDS("bvq-app/data/bvq.rds")
+    # items <- readRDS("bvq-app/data/items.rds")
+    # participants <- readRDS("bvq-app/data/participants.rds")
+    # fit <- readRDS("bvq-app/data/fit.rds")
+    # posterior <- readRDS("bvq-app/data/posterior.rds")
+    # predictions <- readRDS("bvq-app/data/predictions.rds")
+} else {
+    bvq <- readRDS("data/bvq.rds")
+    items <- readRDS("data/items.rds")
+    participants <- readRDS("data/participants.rds")
+    fit <- readRDS("data/fit.rds")
+    posterior <- readRDS("data/posterior.rds")
+    predictions <- readRDS("data/predictions.rds")
+}
