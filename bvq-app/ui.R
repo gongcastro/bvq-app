@@ -59,7 +59,7 @@ ui <- navbarPage(
                                "Levenshtein",
                                min = min(items$lv),
                                max = max(items$lv),
-                               step = 1,
+                               step = 0.1,
                                value = range(items$lv)),
                    selectInput("items_class",
                                "Class",
@@ -73,15 +73,76 @@ ui <- navbarPage(
                                multiple = TRUE, width = "700px")
                )),
         column(width = 9,
-               mainPanel(
-                   column(width = 12,
-                          DTOutput("items_table", width = "150%"))
-               ))
+               fluidRow(
+                   column(width = 9,
+                          fluidRow(plotOutput("items_plot_n_phon",
+                                              width = 800, 
+                                              height = 200)),
+                          fluidRow(column(width = 6,
+                                          plotOutput("items_plot_class",
+                                                     width = 300, 
+                                                     height = 200)),
+                                   column(width = 6,
+                                          plotOutput("items_plot_lv",
+                                                     width = 300, 
+                                                     height = 200)))),
+                   
+                   column(width = 3,
+                          plotOutput("items_plot_semantic_category",
+                                     width = 300, 
+                                     height = 400))
+               ),
+               fluidRow(DTOutput("items_table", width = "100%"))
+        )
     ),
     
     tabPanel(
         "Model", 
-        icon = icon("function"),
-        fluidRow()
+        icon = icon("wave-square"),
+        fluidRow(
+            plotOutput("model_draws")
+        )
+    ),
+    
+    tabPanel(
+        "Predictions", 
+        icon = icon("arrow-trend-up"),
+        column(width = 3,
+               inputPanel(
+                   sliderInput("predictions_age",
+                               "Age (months)",
+                               min = 0,
+                               max = ceiling(max(bvq$logs$age)) + ceiling(max(bvq$logs$age)) %% 10,
+                               step = 1,
+                               value = c(0, ceiling(max(bvq$logs$age)) + ceiling(max(bvq$logs$age)) %% 10),
+                               sep = ",",
+                               dragRange = TRUE),
+                   selectInput("predictions_lp",
+                               "Language profile",
+                               choices = c("Monolingual", "Bilingual"),
+                               selected = c("Monolingual", "Bilingual"),
+                               multiple = TRUE),
+                   selectInput("predictions_dominance",
+                               "Dominance",
+                               choices = c("L1", "L2"),
+                               selected = c("L1", "L2"),
+                               multiple = TRUE),
+                   selectInput("predictions_category",
+                               "Modality",
+                               choices = c("Understands", "Understands and Says"),
+                               selected = c("Understands", "Understands and Says"),
+                               multiple = TRUE),
+                   selectInput("predictions_summary",
+                               "Summary",
+                               choices = c("none", "mean", "median"),
+                               selected = "mean",
+                               multiple = FALSE),
+                   checkboxInput("predictions_uncertainty",
+                                 "Show uncertainty?",
+                                 value = TRUE)
+               )),
+        column(width = 9,
+               plotOutput("trajectories_plot")
+        )
     )
 )

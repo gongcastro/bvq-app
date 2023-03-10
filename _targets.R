@@ -4,10 +4,9 @@ library(conflicted)
 library(cli)
 
 # load R functions -------------------------------------------------------------
-function_paths <- list.files("R",
-                             pattern = ".R",
-                             full.names = TRUE)
-invisible(lapply(function_paths, source))
+function_paths <- invisible({
+    lapply(list.files("R", pattern = ".R", full.names = TRUE), source)
+})
 
 # list package dependencies ----------------------------------------------------
 tar_option_set(
@@ -48,13 +47,11 @@ tar_option_set(
 resolve_conflicts()
 
 # define global options --------------------------------------------------------
-options(
-    mc.cores = 4,
-    brms.backend = "cmdstanr",
-    tidyverse.quiet = TRUE,
-    knitr.duplicate.label = "allow",
-    loo.cores = 1
-)
+options(mc.cores = 4,
+        brms.backend = "cmdstanr",
+        tidyverse.quiet = TRUE,
+        knitr.duplicate.label = "allow",
+        loo.cores = 1)
 
 list(
     ## resolve namespace conflicts ---------------------------------------------
@@ -64,8 +61,11 @@ list(
     tar_target(bvq_data, get_bvq(update = TRUE, longitudinal = "all")),
     
     # items
-    tar_target(items, get_items(bvq_data = bvq_data, childes = childes)),
-
+    tar_target(items, get_items(bvq_data = bvq_data, 
+                                .class = c("Adjective",
+                                           "Noun",
+                                           "Verb"))),
+    
     # participants
     tar_target(
         participants,
@@ -76,10 +76,10 @@ list(
             other_threshold = 0.1
         )
     ),
-
+    
     # responses
     tar_target(responses, get_responses(bvq_data, items, participants)),
-
+    
     # fit models ---------------------------------------------------------------
     
     # model priors: these priors were set so that they generate data similar to
@@ -94,10 +94,7 @@ list(
             prior(normal(1, 0.25), class = "b", coef = "age_std"),
             prior(normal(0, 0.25), class = "b", coef = "lp1"),
             prior(normal(0, 0.25), class = "b", coef = "dominance1"),
-            prior(normal(0, 0.25), class = "b", coef = "age_std:lp1"),
-            prior(normal(0, 0.25), class = "b", coef = "age_std:dominance1"),
-            prior(normal(0, 0.25), class = "b", coef = "lp1:dominance1"),
-            prior(normal(0, 0.25), class = "b", coef = "age_std:lp1:dominance1")
+            prior(normal(0, 0.25), class = "b", coef = "lp1:dominance1")
         )
     ),
     
@@ -108,22 +105,31 @@ list(
     #   - https://bookdown.org/content/3686/ordinal-predicted-variable.html
     # the probability of each response category is adjusted by age (population-level effect)
     # and adjusted for each individual participant and item (group-level effects)
+    tar_target(model_formula,
+               bf(response ~ age_std + lp * dominance +
+                      (1 + age_std + dominance | id) +
+                      (1 + age_std + lp * dominance | te),
+                  family = cumulative(link = "logit"))
+    ), # cumulative, continuation ratio
     
-    # only intercepts (category boundaries)
     tar_target(
         model_fit,
         fit_model(
             name = "fit",
-            formula = bf(
-                response ~ age_std * lp * dominance +
-                    (1 + age_std * dominance | id) +
-                    (1 + age_std * lp * dominance | te),
-                family = cumulative(link = "logit") # cumulative, continuation ratio
-            ),
+            formula = model_formula,
             data = responses,
             prior = model_prior,
             sample_prior = "yes"
         )
+    ),
+    
+    tar_target(
+        model_fit_prior,
+        fit_model(name = "fit",
+                  formula = model_formula,
+                  data = responses,
+                  prior = model_prior,
+                  sample_prior = "only")
     ),
     
     tar_target(
@@ -145,7 +151,7 @@ list(
         )
     ),
     
- 
+    
     # R-hat (aka. Gelman-Rubin statistic)
     tar_target(model_rhats, map(lst(model_fit), rhat)),
     # effective sample size
