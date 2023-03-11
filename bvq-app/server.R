@@ -142,9 +142,9 @@ server <- function(input, output) {
             left_join(distinct(bvq$pool, te, xsampa, label, semantic_category, class),
                       multiple = "first",
                       by = join_by(te)) |> 
-            # filter(between(lv, input$items_lv[1], input$items_lv[2]),
-            #        class %in% class %in% input$items_class,
-            #        semantic_category %in% input$items_semantic_category) |> 
+            filter(between(lv, input$items_lv[1], input$items_lv[2]),
+                   class %in% class %in% input$items_class,
+                   semantic_category %in% input$items_semantic_category) |>
             mutate(label = paste0(label, " (/", xsampa, "/)")) |> 
             pivot_wider(id_cols = c(te, class, semantic_category, lv),
                         names_from = language,
@@ -171,12 +171,10 @@ server <- function(input, output) {
                                      colReorder = TRUE)) |> 
             formatPercentage("Cognateness", 1)
     })
-    # options = list(lengthMenu = c(5, 30, 50),
-    #                pageLength = 30)
-    
     
     output$model_draws <- renderPlot({
         posterior |> 
+            collect() |> 
             ggplot(aes(.value/4, .variable_name)) +
             geom_vline(xintercept = 0,
                        colour = "grey",
@@ -197,19 +195,28 @@ server <- function(input, output) {
     }, res = 100)
     
     output$trajectories_plot <- renderPlot({
+        rescale_age <- function(x){
+            age_sd <- sd(pull(responses, age, as_vector = TRUE))
+            age_mean <- mean(pull(responses, age, as_vector = TRUE))
+            x * age_sd + age_mean
+        }
+        
         predictions |> 
-            mutate(age = rescale_variable(age_std, 
-                                          mean(responses$age),
-                                          sd(responses$age))) |> 
             filter(lp %in% input$predictions_lp,
                    dominance %in% input$predictions_dominance,
-                   between(age, input$predictions_age[1], input$predictions_age[2]),
-                   .category %in% input$predictions_category) |> 
+                   .category %in% input$predictions_category) |>
+            collect() |> 
+            sample_draws(input$trajectories_ndraws) |>
+            mutate(age = rescale_age(age_std)) |> 
+            filter(between(age,
+                           input$predictions_age[1], 
+                           input$predictions_age[2])) |> 
             ggplot(aes(age, .value, colour = interaction(dominance, lp, sep = " - "))) +
             facet_wrap(~ .category) +
             {
                 if (input$predictions_uncertainty) {
-                    geom_line(aes(group =  interaction(.draw, dominance, lp, sep = " - ")),
+                    geom_line(aes(group =  interaction(.draw, dominance, lp, 
+                                                       sep = " - ")),
                               alpha = 1/20,
                               linewidth = 1) 
                 }
@@ -231,6 +238,109 @@ server <- function(input, output) {
                   legend.key.width = unit(1, "cm"))
     }, res = 100)
     
+    output$trajectories_plot_te <- renderPlot({
+        rescale_age <- function(x){
+            age_sd <- sd(pull(responses, age, as_vector = TRUE))
+            age_mean <- mean(pull(responses, age, as_vector = TRUE))
+            x * age_sd + age_mean
+        }
+        
+        predictions_te |> 
+            filter(lp %in% input$predictions_lp,
+                   dominance %in% input$predictions_dominance,
+                   .category %in% input$predictions_category,
+                   te %in% input$trajectories_te_te) |>
+            collect() |> 
+            sample_draws(input$trajectories_ndraws) |>
+            
+            sample_draws(input$trajectories_te_ndraws) |>
+            mutate(age = rescale(age_std)) |> 
+            filter(between(age,
+                           input$predictions_age[1],
+                           input$predictions_age[2])) |>
+            ggplot(aes(age, .value, colour = interaction(dominance, lp, sep = " - "))) +
+            facet_wrap(~ .category) +
+            {
+                if (input$predictions_uncertainty) {
+                    geom_line(aes(group =  interaction(.draw, dominance, lp, sep = " - ")),
+                              alpha = 1/20,
+                              linewidth = 1) 
+                }
+            } +
+            {
+                if (input$predictions_summary != "none") {
+                    stat_summary(geom = "line",
+                                 fun = input$predictions_summary,
+                                 linewidth = 1)
+                }
+            } +
+            labs(x = "Age (months)",
+                 y = "P(acquisition|model)",
+                 colour = "Dominance - LP",
+                 title = input$trajectories_te_te) +
+            scale_colour_manual(values = rev(clrs[c(2, 3, 4, 5)])) +
+            scale_y_continuous(labels = percent) +
+            theme(legend.position = "top",
+                  legend.title = element_blank(),
+                  legend.key.width = unit(1, "cm"))
+    }, res = 100)
+    
+    output$trajectories_plot_id <- renderPlot({
+        rescale_age <- function(x){
+            age_sd <- sd(pull(responses, age, as_vector = TRUE))
+            age_mean <- mean(pull(responses, age, as_vector = TRUE))
+            x * age_sd + age_mean
+        }
+        
+        predictions_id |> 
+            filter(lp %in% input$predictions_lp,
+                   dominance %in% input$predictions_dominance,
+                   .category %in% input$predictions_category,
+                   id %in% input$trajectories_id_id) |>
+            collect() |> 
+            sample_draws(input$trajectories_id_ndraws) |>
+            mutate(age = rescale_age(age_std)) |> 
+            filter(between(age, input$predictions_age[1], input$predictions_age[2])) |> 
+            mutate(age = as.factor(floor(age))) |>   
+            ggplot(aes(age, .value, fill = dominance)) +
+            facet_wrap(~ .category) +
+            {
+                if (input$predictions_uncertainty) {
+                    stat_slab(trim = FALSE,
+                              scale = 0.5,
+                              linewidth = 0.5,
+                              adjust = 2,
+                              aes(side = ifelse(dominance=="L1", "left", "right")))
+                }
+            } +
+            {
+                if (input$predictions_summary != "none") {
+                    stat_summary(geom = "errorbar",
+                                 width = 0.2,
+                                 linewidth = 0.75,
+                                 fun.data = mean_se,
+                                 position = position_dodge(width = 1.5))
+                }
+            } +
+            {
+                if (input$predictions_summary != "none") {
+                    stat_summary(geom = "point",
+                                 size = 2,
+                                 fun = mean,
+                                 position = position_dodge(width = 1.5),
+                                 show.legend = FALSE)
+                }
+            } +
+            labs(x = "Age (months)",
+                 y = "P(acquisition|model)",
+                 colour = "Dominance - LP",
+                 title = input$trajectories_id_id) +
+            scale_fill_manual(values = rev(clrs[c(2, 3, 4, 5)])) +
+            scale_y_continuous(labels = percent) +
+            theme(legend.position = "top",
+                  legend.title = element_blank(),
+                  legend.key.width = unit(1, "cm"))
+    }, res = 100)
 }
 
 

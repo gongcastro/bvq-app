@@ -36,18 +36,24 @@ options(ggplot.discrete.fill = clrs,
         shiny.usecairo = TRUE)
 
 # load data
-if (interactive()) {
-    # bvq <- readRDS("bvq-app/data/bvq.rds")
-    # items <- readRDS("bvq-app/data/items.rds")
-    # participants <- readRDS("bvq-app/data/participants.rds")
-    # fit <- readRDS("bvq-app/data/fit.rds")
-    # posterior <- readRDS("bvq-app/data/posterior.rds")
-    # predictions <- readRDS("bvq-app/data/predictions.rds")
-} else {
-    bvq <- readRDS("data/bvq.rds")
-    items <- readRDS("data/items.rds")
-    participants <- readRDS("data/participants.rds")
-    fit <- readRDS("data/fit.rds")
-    posterior <- readRDS("data/posterior.rds")
-    predictions <- readRDS("data/predictions.rds")
-}
+# bvq <- readRDS("bvq-app/data/bvq.rds")
+# items <- readRDS("bvq-app/data/items.rds")
+# participants <- readRDS("bvq-app/data/participants.rds")
+# fit <- readRDS("bvq-app/data/fit.rds")
+# responses <- open_dataset("bvq-app/data/responses")
+# posterior <- open_dataset("bvq-app/data/posterior")
+# predictions <- open_dataset("bvq-app/data/predictions")
+# predictions_te <- open_dataset("bvq-app/data/predictions_te")
+# predictions_id <- open_dataset("bvq-app/data/predictions_id")
+
+bvq <- readRDS("data/bvq.rds")
+items <- readRDS("data/items.rds")
+participants <- readRDS("data/participants.rds")
+fit <- readRDS("data/fit.rds")
+
+responses <- open_dataset("data/responses")
+posterior <- open_dataset("data/posterior")
+predictions <- open_dataset("data/predictions")
+predictions_te <- open_dataset("data/predictions_te")
+predictions_id <- open_dataset("data/predictions_id")
+
