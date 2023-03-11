@@ -12,16 +12,21 @@ make <- function() {
 
 # remove targets products
 unmake <- function(keep_fits = TRUE) {
-    path <- "results/fit.rds"
-    tar_destroy(ask = FALSE)
-    
-    if (!keep_fits) {
-        filenames <-
-            list.files("results", pattern = "fit", full.names = TRUE)
-        if (length(filenames > 0)) {
-            lapply(filenames, file.remove)
+    invisible({
+        path <- "results/fit.rds"
+        tar_destroy(ask = FALSE)
+        lapply(list.files("bvq-app/docs", 
+                          pattern = "\\.md", 
+                          full.names = TRUE), 
+               file.remove)
+        if (!keep_fits) {
+            filenames <-
+                list.files("results", pattern = "fit", full.names = TRUE)
+            if (length(filenames > 0)) {
+                lapply(filenames, file.remove)
+            }
         }
-    }
+    })
     
     cli_alert_success("Removed project outputs")
 }
@@ -73,6 +78,13 @@ days_to_months <- function(x, .sep = ";") {
     glue(floor(x %/% 30),
          floor(x %% 30),
          .sep = .sep)
+}
+
+deploy <- function() {
+    deployApp("bvq-app",
+              appFileManifest = "bvq-app/manifest.toml",
+              appName = "bvq-app",
+              launch.browser = TRUE)
 }
 
 #' Rescale standardised variable

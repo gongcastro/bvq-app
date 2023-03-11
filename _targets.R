@@ -24,6 +24,7 @@ tar_option_set(
         "glue",
         "ipa",
         "janitor",
+        "knitr",
         "keyring",
         "knitr",
         "lubridate",
@@ -33,6 +34,7 @@ tar_option_set(
         "quarto",
         "readxl",
         "rlang",
+        "rsconnect",
         "scales",
         "shiny",
         "stringdist",
@@ -139,15 +141,39 @@ list(
     
     ## marginal effects --------------------------------------------------------
     tar_target(
-        marginal_effects_epreds,
+        predictions,
         posterior_predictions(
             model = model_fit,
             responses, 
-            age_std = scale(seq(12, 50),
+            age_std = scale(seq(0, 50),
                             mean(responses$age),
                             sd(responses$age)),
             dominance = c("L1", "L2"),
             lp = c("Monolingual", "Bilingual")
+        )
+    ),
+    
+    tar_target(
+        predictions_te,
+        posterior_predictions_re(
+            model = model_fit,
+            responses, 
+            group = "te",
+            age_std = scale(seq(0, 50, 1),
+                            mean(responses$age),
+                            sd(responses$age)),
+            dominance = c("L1", "L2"),
+            lp = c("Monolingual", "Bilingual")
+        )
+    ),
+    
+    tar_target(
+        predictions_id,
+        posterior_predictions_re(
+            model = model_fit,
+            responses, 
+            group = "id",
+            dominance = c("L1", "L2")
         )
     ),
     
@@ -157,13 +183,21 @@ list(
     # effective sample size
     tar_target(model_neffs, map(lst(model_fit), neff_ratio)),
     
-    # posterior predictive checks
-    tar_target(
-        model_ppcs,
-        {
-            yrep_char <- posterior_predict(model_fit, ndraws = 50)
-            sapply(data.frame(yrep_char, stringsAsFactors = TRUE), as.integer)
-        }
-    )
+    # # posterior predictive checks
+    # tar_target(
+    #     model_ppcs,
+    #     {
+    #         yrep_char <- posterior_predict(model_fit, ndraws = 50)
+    #         sapply(data.frame(yrep_char, stringsAsFactors = TRUE), as.integer)
+    #     }
+    # ),
+    # 
+    tar_target(docs_home,
+               knit(input = "bvq-app/docs/_home.Rmd",
+                    output = "bvq-app/docs/_home.md")),
+    
+    tar_target(docs_model,
+               knit(input = "bvq-app/docs/_model-details.Rmd", 
+                    output = "bvq-app/docs/_model-details.md"))
 )
 

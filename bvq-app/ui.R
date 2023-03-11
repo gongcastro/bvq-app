@@ -6,13 +6,8 @@ ui <- navbarPage(
     tabPanel(
         "Home", 
         icon = icon("home"),
+        includeMarkdown("docs/_home.md"),
         br(),
-        h1("Barcelona Vocabulary Questionnaire (BVQ)"),
-        img(src = "logo.png", align = "right", height = "200px"),
-        br(),
-        p("This app shows the Barcelona Vocabulary Questionnaire (BVQ) database,
-          with vocabulary data from monolingual and bilingual children living in the
-          Metropolitan Area of Barcelona (Spain).")
     ),
     
     tabPanel(
@@ -101,6 +96,13 @@ ui <- navbarPage(
         icon = icon("wave-square"),
         fluidRow(
             plotOutput("model_draws")
+        ),
+        br(),
+        fluidRow(
+            withMathJax(),
+            h3("Model formula"),
+            br(),
+            includeMarkdown("docs/_model-details.md")
         )
     ),
     
@@ -141,8 +143,53 @@ ui <- navbarPage(
                                  "Show uncertainty?",
                                  value = TRUE)
                )),
-        column(width = 9,
-               plotOutput("trajectories_plot")
+        column(
+            width = 9,
+            tabsetPanel(
+                type = "tabs",
+                tabPanel("Population-level", icon = icon("globe"),
+                         sliderInput("trajectories_ndraws",
+                                     "Number of posterior draws",
+                                     min = 1,
+                                     max = length(unique(pull(predictions, .draw, as_vector = TRUE))),
+                                     value = length(unique(pull(predictions, .draw, as_vector = TRUE))),
+                                     sep = ",",
+                                     step = 1),
+                         plotOutput("trajectories_plot")),
+                tabPanel("Word-level", icon = icon("font"),
+                         br(),
+                         selectInput("trajectories_te_te",
+                                     "Word",
+                                     choices = unique(fit$data$te),
+                                     selected = unique(fit$data$te)[1],
+                                     multiple = FALSE),
+                         sliderInput("trajectories_te_ndraws",
+                                     "Number of posterior draws",
+                                     min = 1,
+                                     max = 100,
+                                     value = 100,
+                                     sep = ",",
+                                     step = 1),
+                         br(),
+                         plotOutput("trajectories_plot_te")),
+                tabPanel("Child-level", icon = icon("child"),
+                         br(),
+                         selectInput("trajectories_id_id",
+                                     "Child",
+                                     choices = unique(fit$data$id),
+                                     selected = unique(fit$data$id)[1],
+                                     multiple = FALSE),
+                         sliderInput("trajectories_id_ndraws",
+                                     "Number of posterior draws",
+                                     min = 1,
+                                     max = length(unique(pull(predictions_id, .draw, as_vector = TRUE))),
+                                     value = length(unique(pull(predictions_id, .draw, as_vector = TRUE))),
+                                     sep = ",",
+                                     step = 1),
+                         br(),
+                         plotOutput("trajectories_plot_id")
+                )
+            )
         )
     )
 )

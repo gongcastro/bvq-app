@@ -1,3 +1,54 @@
+#' Generate dataset with posterior predictions from a brmsfit model
+#'
+#' @param model A brmsfit object
+#' @param data Data with which the model was fist, containing the original variables
+#' @param group Group for which posterior predictions will be generated. If `NULL` (default), posterior predictions will be generated for fixed effect. If `"te"`, predictions will be generated for translation equivalents. If `"id"`, predictions will be generated for participants.
+#' @param levels If group is `"te"` or `"id"`, specific levels (translation equivalents or participants) can be specified. If NULL (default), posterior predictions are generated for all levels of the grouping variable.
+#' @inheritParams marginaleffects::datagrid
+generate_newdata <- function(model,
+                             data,
+                             group = NULL,
+                             levels = NULL,
+                             ...) {
+    # if group(s) specified (and valid), extract desired levels
+    if (!is.null(group)) {
+        check_arg_group <- group %in% c("te", "id") | length(group) > 1
+        if (!check_arg_group) {
+            cli_abort("group must be one of 'te' or 'id")
+        }
+        
+        # make sure that all levels exist in the dataset
+        if (!is.null(levels)) {
+            levels_in_data <- levels %in% data[[group]]
+            if (!all(levels_in_data)) {
+                missing_levels <- paste0(levels[!levels_in_data], collapse = ", ")
+                cli_abort("Level {missing_levels} in {.field {group}} is missing")
+            }
+        } else {
+            levels <- unique(data[[group]])
+        }
+        
+        if (group == "te") {
+            # if group is "te", generate predictions for each level of `te`
+            newdata <- datagrid(model = model, te = levels, id = NA, ...) |>
+                left_join(distinct(data, te),
+                          by = join_by(te))
+        }
+        
+        if (group == "id") {
+            # expand predictor levels in data frame to generate predictions
+            newdata <- datagrid(model = model, id = levels, te = NA,
+                                dominance = c("L1", "L2")) |>
+                left_join(distinct(data, id, age_std, lp),
+                          by = join_by(age_std, lp, id))
+        }
+    } else {
+        newdata <- datagrid(model = model, te = NA, id = NA, ...)
+    }
+    
+    return(newdata)
+}
+
 #' Generate posterior predictions for fixed effects brmsfit model via [marginaleffects::predictions()]
 #'
 #' @param model A brmsfit object
@@ -5,19 +56,14 @@
 #' @inheritParams marginaleffects::datagrid
 posterior_predictions <- function(model, data, ...) {
     # generate data for predictions
-    newdata <- generate_newdata(model, data, 
-                                age_std = scale(seq(0, 50),
-                                                mean(data$age),
-                                                sd(data$age)),
-                                dominance = c("L1", "L2"),
-                                lp = c("Monolingual", "Bilingual"))
+    newdata <- generate_newdata(model, data, ...)
     
     # use marginaleffects to get posterior means
     predictions <- predictions(model,
                                newdata = newdata,
                                re_formula = NA,
                                vcov = FALSE,
-                               ndraws = 50) |>
+                               ndraws = 100) |>
         posteriordraws() |> # so that each draw gets a row
         as_tibble() |>
         clean_names() |> 
@@ -36,7 +82,10 @@ posterior_predictions <- function(model, data, ...) {
     
     # save predictions as Parquet file
     save_files(predictions, folder = "results/predictions")
-    saveRDS(predictions, "bvq-app/data/predictions.rds")
+    write_dataset(predictions, 
+                  path = "bvq-app/data/predictions",
+                  format = "parquet",
+                  partitioning = c("dominance", "lp"))
     
     return(predictions)
 }
@@ -48,44 +97,57 @@ posterior_predictions <- function(model, data, ...) {
 #' @param group Group level for which posterior predictions are generated. Takes `"te"` or `"id"` as values.
 #' @param ... Additional arguments passed to [marginaleffects::predictions()]
 posterior_predictions_re <- function(model, data, group, ...) {
-    if (!(group %in% c("id", "te"))) {
+    
+    check_arg_group <- group %in% c("id", "te")
+    if (!check_arg_group) {
         cli_abort("group must be 'id' or 'te'")
     }
+    
     # generate data for predictions
     newdata <- generate_newdata(model, data, group, ...)
     
     # use marginaleffects to get posterior means
-    preds <- predictions(model,
-                         newdata = newdata,
-                         re_formula = as.formula(paste0("~ 1 | ", group)),
-                         vcov = FALSE,
-                         ndraws = 10) |>
+    predictions <- predictions(model,
+                               newdata = newdata,
+                               re_formula = as.formula(paste0("~ 1 | ", group)),
+                               vcov = FALSE,
+                               ndraws = 100) |>
         posteriordraws() |> # so that each draw gets a row
         as_tibble() |>
         clean_names() |>
-        filter(group != "No") |>
-        pivot_wider(id_cols = c(drawid, age_std, lv_std, exposure_std, te, id),
+        filter(group != "No") |> 
+        pivot_wider(id_cols = c(drawid, age_std, dominance, lp, te, id),
                     names_from = group,
                     values_from = draw) |>
         mutate(`Understands` = `Understands and Says` + `Understands`) |>
         pivot_longer(c(`Understands`, `Understands and Says`),
                      names_to = "group",
                      values_to = "draw") |>
-        mutate(age = age_std * sd(data$age) + mean(data$age))
+        select(any_of(colnames(newdata)),
+               .category = group,
+               .draw = drawid,
+               .value = draw)
     
     if (group == "te") {
-        predictions_te <- preds
+        predictions_te <- predictions
         # export results
         save_files(predictions_te, folder = "results/predictions")
         saveRDS(predictions, "bvq-app/data/predictions_te.rds")
+        write_dataset(predictions_te, 
+                      path = "bvq-app/data/predictions_te",
+                      format = "parquet",
+                      partitioning = "te")
         predictions_re <- predictions_te
     }
     
     if (group == "id") {
-        predictions_id <- preds
+        predictions_id <- predictions
         # export results
         save_files(predictions_id, folder = "results/predictions")
-        saveRDS(predictions, "bvq-app/data/predictions_id.rds")
+        write_dataset(predictions_id, 
+                      path = "bvq-app/data/predictions_id",
+                      format = "parquet",
+                      partitioning = "id")
         predictions_re <- predictions_id
     }
     

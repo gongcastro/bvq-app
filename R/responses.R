@@ -54,6 +54,12 @@ get_responses <- function(bvq_data, items, participants) {
     # export data
     save_files(responses, folder = "data")
     
+    saveRDS(responses, "bvq-app/data/responses.rds")
+    write_dataset(responses, 
+                  path = "bvq-app/data/responses",
+                  format = "parquet",
+                  partitioning = c("id"))
+    
     return(responses)
     
 }
