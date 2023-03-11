@@ -1,6 +1,3 @@
-# utils
-
-
 #' Custom ggplot2 theme
 theme_custom <- function() {
     theme_minimal() +
@@ -30,13 +27,6 @@ days_to_months <- function(x, .sep = ";") {
     glue(floor(x %/% 30),
          floor(x %% 30),
          .sep = .sep)
-}
-
-deploy <- function() {
-    deployApp("bvq-app",
-              appFileManifest = "bvq-app/manifest.toml",
-              appName = "bvq-app",
-              launch.browser = TRUE)
 }
 
 #' Rescale standardised variable
@@ -93,9 +83,7 @@ prop_adj_ci <- function(y, n, .width = 0.95, limit) {
         return(ci[2])
 }
 
-
-
-#' Generate a regular sequence of \code{n} elements in the range of a numeric vector \code{x}
+#' Generate a regular sequence of `n` elements in the range of a numeric vector `x`
 #'
 #' @param x Numeric vector
 #' @param n Length of the vector to be generated
@@ -105,7 +93,7 @@ seq_range <- function(x, n) {
         length.out = n)
 }
 
-#' Transform any list column in a dataframe to collapsed character vector
+#' Transform any list column in a data frame to collapsed character vector
 #'
 #' @param x A dataframe
 flatten_columns <- function(x) {
