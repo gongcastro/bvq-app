@@ -31,6 +31,14 @@ unmake <- function(keep_fits = TRUE) {
     cli_alert_success("Removed project outputs")
 }
 
+#' Deploy app
+deploy <- function() {
+    deployApp("bvq-app",
+              appFileManifest = "bvq-app/manifest.toml",
+              appName = "bvq-app",
+              launch.browser = TRUE)
+}
+
 #' Resolve NAMESPACE conflicts
 #'
 resolve_conflicts <- function() {
