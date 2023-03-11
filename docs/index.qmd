@@ -1,7 +1,9 @@
 ---
 title: "bvq-app"
-output_format: md_document
-bibliography: "../../assets/references.bib"
+format: gfm
+output-file: "index.md"
+keep-yaml: true
+bibliography: "../assets/references.bib"
 ---
 
 

@@ -56,7 +56,7 @@ server <- function(input, output) {
             scale_y_continuous(labels = percent) +
             theme(legend.position = "none")
         
-    })
+    }, res = 100)
     
     output$items_plot_lv <- renderPlot({
         items %>%
@@ -78,7 +78,7 @@ server <- function(input, output) {
             scale_y_continuous(labels = percent) +
             theme(legend.position = "none")
         
-    })
+    }, res = 100)
     
     output$items_plot_class <- renderPlot({
         items %>%
@@ -103,7 +103,7 @@ server <- function(input, output) {
             theme(legend.position = "none",
                   axis.title.x = element_blank())
         
-    })
+    }, res = 100)
     
     output$items_plot_semantic_category <- renderPlot({
         items %>%
@@ -117,24 +117,26 @@ server <- function(input, output) {
             add_count(name = "n_total") |>
             count(semantic_category, class, n_total) |> 
             mutate(prop = n/n_total) |> 
-            ggplot(aes(prop, reorder(semantic_category, prop),
+            ggplot(aes(reorder(semantic_category, desc(prop)), prop,
                        fill = class)) +
-            geom_col(colour = "white") +
+            geom_col() +
             geom_text(aes(label = n),
-                      position = position_nudge(x = 0.01),
+                      position = position_nudge(y = 0.01),
                       size = 2.5) +
-            labs(y = "Semantic category",
-                 x = "Proportion of words") +
-            scale_x_continuous(labels = percent) +
+            labs(x = "Semantic category",
+                 y = "Proportion of words") +
+        scale_x_discrete(labels = label_wrap(10)) + 
+            scale_y_continuous(labels = percent) +
             scale_fill_manual(values = clrs[c(1, 3, 5)]) +
-            theme(legend.position = c(1, 0.25),
+            theme(legend.position = "left",
                   legend.justification = c(1, 0),
                   legend.title = element_blank(),
-                  panel.grid.major.x = element_line(colour = "grey",
+                  panel.grid = element_blank(),
+                  panel.grid.major.y = element_line(colour = "grey",
                                                     linetype = "dotted"),
-                  axis.title.y = element_blank())
+                  axis.title.x = element_blank())
         
-    })
+    }, res = 100)
     
     output$items_table <- renderDT({
         items %>%
@@ -143,7 +145,7 @@ server <- function(input, output) {
                       multiple = "first",
                       by = join_by(te)) |> 
             filter(between(lv, input$items_lv[1], input$items_lv[2]),
-                   class %in% class %in% input$items_class,
+                   class %in% input$items_class,
                    semantic_category %in% input$items_semantic_category) |>
             mutate(label = paste0(label, " (/", xsampa, "/)")) |> 
             pivot_wider(id_cols = c(te, class, semantic_category, lv),
@@ -251,10 +253,8 @@ server <- function(input, output) {
                    .category %in% input$predictions_category,
                    te %in% input$trajectories_te_te) |>
             collect() |> 
-            sample_draws(input$trajectories_ndraws) |>
-            
             sample_draws(input$trajectories_te_ndraws) |>
-            mutate(age = rescale(age_std)) |> 
+            mutate(age = rescale_age(age_std)) |> 
             filter(between(age,
                            input$predictions_age[1],
                            input$predictions_age[2])) |>
@@ -276,13 +276,12 @@ server <- function(input, output) {
             } +
             labs(x = "Age (months)",
                  y = "P(acquisition|model)",
-                 colour = "Dominance - LP",
-                 title = input$trajectories_te_te) +
+                 colour = "Dominance - LP") +
             scale_colour_manual(values = rev(clrs[c(2, 3, 4, 5)])) +
             scale_y_continuous(labels = percent) +
-            theme(legend.position = "top",
-                  legend.title = element_blank(),
-                  legend.key.width = unit(1, "cm"))
+            theme(legend.title = element_blank(),
+                  legend.key.width = unit(1, "cm"),
+                  legend.position = "left")
     }, res = 100)
     
     output$trajectories_plot_id <- renderPlot({
