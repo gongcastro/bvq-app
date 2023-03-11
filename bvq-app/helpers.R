@@ -136,15 +136,3 @@ save_files <- function(x,
     saveRDS(x, file_paths[grepl(".rds", file_paths)])
     cli_alert_success("Saved to {.path {folder}}")
 }
-
-remove_nul <- function() {
-    paths <- c("manuscript", "docs")
-    cur_path <- gsub("/", "\\\\", getwd())
-    nul_path <- glue("{cur_path}\\{paths}\\NUL.")
-    file.exists(nul_path)
-    cmd1 <- glue("rename \\\\.\\{nul_path} delete.txt")
-    cmd2 <- glue("del \\\\.\\{nul_path}\\delete.txt")
-    lapply(cmd1, shell)
-    lapply(cmd2, shell)
-    shell(cmd2)
-}

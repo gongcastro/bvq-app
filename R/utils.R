@@ -7,21 +7,29 @@ make <- function() {
         job::export("none")  # return nothing
     },
     import = NULL,
-    title = "Trajectories")
+    title = "bvq-app")
 }
 
 # remove targets products
-unmake <- function(keep_fits = TRUE) {
+unmake <- function(remove_targets = TRUE, 
+                   remove_md = TRUE,
+                   remove_fits = FALSE) {
     invisible({
-        path <- "results/fit.rds"
-        tar_destroy(ask = FALSE)
-        lapply(list.files("bvq-app/docs", 
-                          pattern = "\\.md", 
-                          full.names = TRUE), 
-               file.remove)
-        if (!keep_fits) {
-            filenames <-
-                list.files("results", pattern = "fit", full.names = TRUE)
+        if (remove_targets) {
+            tar_destroy(ask = FALSE)
+        }
+        
+        if (remove_md) {
+            lapply(list.files("bvq-app/docs", 
+                              pattern = "\\.md", 
+                              full.names = TRUE), 
+                   file.remove)
+        }
+        
+        if (remove_fits) {
+            filenames <- list.files("results",
+                                    pattern = "fit",
+                                    full.names = TRUE)
             if (length(filenames > 0)) {
                 lapply(filenames, file.remove)
             }
@@ -34,7 +42,7 @@ unmake <- function(keep_fits = TRUE) {
 #' Deploy app
 deploy <- function() {
     deployApp("bvq-app",
-              appFileManifest = "bvq-app/manifest.toml",
+              # appFileManifest = "bvq-app/manifest.toml",
               appName = "bvq-app",
               launch.browser = TRUE)
 }

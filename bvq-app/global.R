@@ -49,11 +49,25 @@ options(ggplot.discrete.fill = clrs,
 bvq <- readRDS("data/bvq.rds")
 items <- readRDS("data/items.rds")
 participants <- readRDS("data/participants.rds")
-fit <- readRDS("data/fit.rds")
 
 responses <- open_dataset("data/responses")
 posterior <- open_dataset("data/posterior")
 predictions <- open_dataset("data/predictions")
 predictions_te <- open_dataset("data/predictions_te")
 predictions_id <- open_dataset("data/predictions_id")
+
+te_labels_df <-  responses |> 
+    distinct(te, language) |> 
+    inner_join(select(bvq$pool, te, language, label)) |> 
+    collect() |> 
+    pivot_wider(names_from = language,
+                values_from = label,
+                values_fn = first,
+                names_repair = make_clean_names) |> 
+    mutate(label = paste0(catalan, " / ", spanish)) |> 
+    select(te, label) |> 
+    arrange(label)
+
+te_labels <- te_labels_df$te
+names(te_labels) <- te_labels_df$label
 

@@ -6,10 +6,6 @@ fit_model <- function(name, is_prior = FALSE, ...) {
                         glue("results/fits/{name}_prior.rds"),
                         glue("results/fits/{name}.rds"))
     
-    file_path_app <- ifelse(is_prior,
-                            glue("bvq-app/data/{name}_prior.rds"),
-                            glue("bvq-app/data/{name}.rds"))
-    
     # we run the model in the background as an RStudio job to keep the console free
     # see R/utils.R
     fit <- brm(...,
@@ -20,12 +16,10 @@ fit_model <- function(name, is_prior = FALSE, ...) {
                seed = 888,
                backend = "cmdstanr",
                file = file_path,
-               file_refit = "on_change",
+               file_refit = "never",
                control = list(adapt_delta = 0.9,
                               max_treedepth = 15),
                save_model = glue("stan/{name}.stan"))
-    
-    saveRDS(fit, file_path_app)
     
     return(fit)
 }

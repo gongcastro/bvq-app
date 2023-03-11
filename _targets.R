@@ -192,12 +192,18 @@ list(
     #     }
     # ),
     # 
-    tar_target(docs_home,
-               knit(input = "bvq-app/docs/_home.Rmd",
-                    output = "bvq-app/docs/_home.md")),
+    tar_quarto(docs_index, path = "docs/index.qmd"),
     
-    tar_target(docs_model,
-               knit(input = "bvq-app/docs/_model-details.Rmd", 
-                    output = "bvq-app/docs/_model-details.md"))
+    tar_quarto(docs_model, path = "docs/model.qmd"),
+    
+    tar_target(
+        copy_files,
+        {
+            file_paths <- list.files("docs/", full.names = TRUE, pattern = "\\.md")
+            invisible({
+                file.copy(file_paths, "bvq-app/docs/", overwrite = TRUE)
+            })
+        }
+    )
 )
 
