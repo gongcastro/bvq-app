@@ -1,5 +1,5 @@
 #' Get BVQ data
-#' @param ... Arguments to be passed to \code{bvq_responses}
+#' @param ... Arguments to be passed to [bvqdev::bvq_responses()]
 #' @returns A named list of data frames containing questionnaire responses, participant data, and item data from BVQ
 get_bvq <- function(...) {
     
@@ -36,8 +36,10 @@ get_bvq <- function(...) {
                doe_catalan, doe_spanish, doe_others)
     
     pool <- bvqdev::pool |>
-        mutate(xsampa = flatten_sampa(xsampa),
-               ipa = xsampa(xsampa, "ipa"))
+        mutate(ipa = xsampa(xsampa, "ipa"),
+               xsampa = str_remove_all(xsampa, '\\\"|\\.'),
+               syll = strsplit(ipa, 'ˈ|\\.') |> 
+                   map(\(x) x[x != ""]))
     
     v <- bvq_vocabulary(p, r)
     

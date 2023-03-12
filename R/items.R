@@ -1,6 +1,6 @@
 #' Get item data
 #'
-#' @param bvq_data A named list resulting from calling \code{get_bvq}
+#' @param bvq_data A named list resulting from calling [get_bvq()]
 #' @param class A character vector indicating the word classes to be included in the resulting dataset. Takes "Adjective", "Noun" and/or "Verb" as values.
 get_items <- function(bvq_data, .class = "Noun") {
     
@@ -15,7 +15,7 @@ get_items <- function(bvq_data, .class = "Noun") {
     
     pool_tmp <- bvq_data$pool |>
         # drop items with missing observations in these variables
-        drop_na(ipa, wordbank_lemma) |>
+        drop_na(ipa) |>
         filter(n_lemmas == 1,
                # exclude items with more than two lemmas
                !is_multiword,
@@ -27,7 +27,8 @@ get_items <- function(bvq_data, .class = "Noun") {
                class %in% .class) |>
         add_count(te, name = "n_te") |> # get only items with one translation in each language
         filter(n_te == 2) |>
-        distinct(language, te, item, label, xsampa, ipa, class, version)
+        distinct(language, te, item, label, xsampa, ipa, syll, 
+                 class, version, semantic_category)
     
     # compute Levenshtein distances
     lv_df <- pool_tmp |> 
@@ -44,8 +45,10 @@ get_items <- function(bvq_data, .class = "Noun") {
         rename(list = version) |>
         drop_na(lv, list) |>
         mutate(n_phon = nchar(xsampa),
+               n_syll = map_int(syll, length),
                item = str_remove(item, "cat_|spa_")) |>
-        select(te, language, item, ipa, lv, n_phon, list) |>
+        select(te, language, item, label, ipa, lv, n_phon, n_syll,
+               class, semantic_category) |>
         arrange(te)
     
     # export to data folder

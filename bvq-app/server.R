@@ -1,7 +1,7 @@
 server <- function(input, output) {
     
     output$responses_age_plot <- renderPlot({
-        bvq$logs %>%
+        participants %>%
             filter(between(age, input$participants_age[1], input$participants_age[2]),
                    between(time_stamp, input$participants_time_stamp[1], input$participants_time_stamp[2]),
                    lp %in% input$participants_lp) %>%
@@ -15,7 +15,7 @@ server <- function(input, output) {
     })
     
     output$responses_date_plot <- renderPlot({
-        bvq$logs %>%
+        participants %>%
             filter(between(age, input$participants_age[1], input$participants_age[2]),
                    between(time_stamp, input$participants_time_stamp[1], input$participants_time_stamp[2]),
                    lp %in% input$participants_lp) %>%
@@ -30,11 +30,10 @@ server <- function(input, output) {
     
     output$items_plot_n_phon <- renderPlot({
         items %>%
-            left_join(distinct(bvq$pool, te, label, semantic_category, class),
-                      multiple = "first",
-                      by = join_by(te)) |> 
             filter(between(lv, input$items_lv[1], input$items_lv[2]),
                    class %in% input$items_class,
+                   between(n_phon, input$items_n_phon[1], input$items_n_phon[2]),
+                   between(n_syll, input$items_n_syll[1], input$items_n_syll[2]),
                    semantic_category %in% input$items_semantic_category) |>
             select(te, language, n_phon) |> 
             add_count(language, name = "n_total") |> 
@@ -58,11 +57,37 @@ server <- function(input, output) {
         
     }, res = 100)
     
+    output$items_plot_n_syll <- renderPlot({
+        items %>%
+            filter(between(lv, input$items_lv[1], input$items_lv[2]),
+                   class %in% input$items_class,
+                   between(n_phon, input$items_n_phon[1], input$items_n_phon[2]),
+                   between(n_syll, input$items_n_syll[1], input$items_n_syll[2]),
+                   semantic_category %in% input$items_semantic_category) |>
+            select(te, language, n_syll) |> 
+            add_count(language, name = "n_total") |> 
+            count(language, n_syll, n_total) |> 
+            ungroup() |> 
+            ggplot(aes(n_syll, n/n_total, fill = language)) +
+            facet_wrap(~ language) +
+            geom_col(colour = "white") +
+            geom_text(aes(label = n),
+                      position = position_nudge(y = 0.05),
+                      size = 2.5) +
+            labs(x = "Number of syllables",
+                 y = "Number of words",
+                 colour = "Language",
+                 fill = "Language") +
+            scale_colour_manual(values = clrs[c(1, 4)]) +
+            scale_fill_manual(values = clrs[c(1, 4)]) +
+            scale_x_continuous(breaks = 1:max(items$n_syll)) +
+            scale_y_continuous(labels = percent) +
+            theme(legend.position = "none")
+        
+    }, res = 100)
+    
     output$items_plot_lv <- renderPlot({
         items %>%
-            left_join(distinct(bvq$pool, te, label, semantic_category, class),
-                      multiple = "first",
-                      by = join_by(te)) |> 
             filter(between(lv, input$items_lv[1], input$items_lv[2]),
                    class %in% input$items_class,
                    semantic_category %in% input$items_semantic_category) |>
@@ -70,8 +95,6 @@ server <- function(input, output) {
             ggplot(aes(lv)) +
             stat_slab(colour = "white",
                       fill = clrs[2]) +
-            geom_rug(alpha = 0.5,
-                     colour = clrs[1]) +
             labs(x = "Cognateness (Levenshtein similarity)",
                  y = "Proportion of words") +
             scale_x_continuous(labels = percent) +
@@ -82,11 +105,10 @@ server <- function(input, output) {
     
     output$items_plot_class <- renderPlot({
         items %>%
-            left_join(distinct(bvq$pool, te, label, semantic_category, class),
-                      multiple = "first",
-                      by = join_by(te)) |> 
             filter(between(lv, input$items_lv[1], input$items_lv[2]),
                    class %in% input$items_class,
+                   between(n_phon, input$items_n_phon[1], input$items_n_phon[2]),
+                   between(n_syll, input$items_n_syll[1], input$items_n_syll[2]),
                    semantic_category %in% input$items_semantic_category) |>
             select(te, class) |> 
             add_count(name = "n_total") |>
@@ -107,11 +129,10 @@ server <- function(input, output) {
     
     output$items_plot_semantic_category <- renderPlot({
         items %>%
-            left_join(distinct(bvq$pool, te, label, semantic_category, class),
-                      multiple = "first",
-                      by = join_by(te)) |> 
             filter(between(lv, input$items_lv[1], input$items_lv[2]),
                    class %in% input$items_class,
+                   between(n_phon, input$items_n_phon[1], input$items_n_phon[2]),
+                   between(n_syll, input$items_n_syll[1], input$items_n_syll[2]),
                    semantic_category %in% input$items_semantic_category) |>
             select(te, class, semantic_category) |> 
             add_count(name = "n_total") |>
@@ -140,18 +161,18 @@ server <- function(input, output) {
     
     output$items_table <- renderDT({
         items %>%
-            select(te, language, n_phon, lv) |> 
-            left_join(distinct(bvq$pool, te, xsampa, label, semantic_category, class),
-                      multiple = "first",
-                      by = join_by(te)) |> 
             filter(between(lv, input$items_lv[1], input$items_lv[2]),
                    class %in% input$items_class,
+                   between(n_phon, input$items_n_phon[1], input$items_n_phon[2]),
+                   between(n_syll, input$items_n_syll[1], input$items_n_syll[2]),
                    semantic_category %in% input$items_semantic_category) |>
-            mutate(label = paste0(label, " (/", xsampa, "/)")) |> 
+            select(te, language, label, ipa, lv, class, semantic_category) |> 
+            mutate(label = paste0(label, " (/", ipa, "/)")) |> 
             pivot_wider(id_cols = c(te, class, semantic_category, lv),
                         names_from = language,
                         values_from = label,
                         names_repair = make_clean_names) |> 
+            drop_na() |> 
             relocate(te,
                      class,
                      semantic_category,
@@ -170,7 +191,11 @@ server <- function(input, output) {
                                    "Spanish" = 6),
                       extensions = "ColReorder",
                       options = list(lengthMenu = seq(10, 100, 10),
-                                     colReorder = TRUE)) |> 
+                                     colReorder = TRUE,
+                                     autoWidth = TRUE,
+                                     columnDefs = list(list(width = "25px", targets = c(0, 1, 3)),
+                                                       list(width = "100px", targets = 2),
+                                                       list(width = "300px", targets = 4:5)))) |> 
             formatPercentage("Cognateness", 1)
     })
     
