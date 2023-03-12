@@ -20,8 +20,7 @@ get_responses <- function(bvq_data, items, participants) {
         arrange(id, time)
     
     responses <- responses_tmp |> 
-        inner_join(select(items, -list),
-                  by = join_by(language, item)) |> 
+        inner_join(items, by = join_by(language, item)) |> 
         inner_join(participants,
                   by = join_by(id, time)) |>
         mutate(
@@ -53,9 +52,7 @@ get_responses <- function(bvq_data, items, participants) {
     
     # export data
     save_files(responses, folder = "data")
-    
-    saveRDS(responses, "bvq-app/data/responses.rds")
-    write_dataset(responses, 
+        write_dataset(responses, 
                   path = "bvq-app/data/responses",
                   format = "parquet",
                   partitioning = c("id"))
