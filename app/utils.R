@@ -6,7 +6,7 @@ get_bvq_data <- function(...) {
     p <- bvq_participants()
     r <- bvq_responses(p, ...)
     l <- bvq_logs(p, r)
-    i <- bvqdev::pool %>%
+    i <- bvq::pool %>%
         select(item, language, te, label, ipa, sampa, n_lemmas, is_multiword,
                semantic_category, class) %>%
         mutate(n_phon = nchar(gsub("\\.", "", sampa))) %>%
