@@ -30,7 +30,7 @@ COPY ./renv.lock .
 # install and restore renv
 RUN R -e 'install.packages("renv", repos = "https://packagemanager.rstudio.com/all/__linux__/focal/latest")'
 RUN Rscript -e "options(renv.consent = TRUE); \
-	renv::restore(lockfile = '/srv/shiny-server/renv.lock', repos = \
+    renv::restore(lockfile = '/srv/shiny-server/renv.lock', repos = \
     c(CRAN='https://packagemanager.rstudio.com/all/__linux__/focal/latest'))"
 
 # expose app

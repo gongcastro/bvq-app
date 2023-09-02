@@ -1,0 +1,16 @@
+data/bvq.rds
+data/fit.rds
+data/items.rds
+data/participants.rds
+data/posterior/*
+data/predictions/*
+data/predictions_id/*
+data/predictions_te/
+data/responses/
+docs/index.md
+docs/model.md
+global.R
+server.R
+ui.R
+utils.R
+www/logo.png
