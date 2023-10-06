@@ -3,30 +3,40 @@ server <- function(input, output) {
     output$responses_age_plot <- renderPlot({
         participants %>%
             filter(between(age, input$participants_age[1], input$participants_age[2]),
-                   between(time_stamp, input$participants_time_stamp[1], input$participants_time_stamp[2]),
+                   between(date_finished, input$participants_date_finished[1], input$participants_date_finished[2]),
                    lp %in% input$participants_lp) %>%
             mutate(age = floor(age)) %>%
             count(age) %>%
             ggplot(aes(age, n)) +
             geom_col(fill = clrs[4], colour = "white") +
-            geom_text(aes(label = n), size = 3, position = position_nudge(y = 1)) +
+            geom_text(aes(label = n), size = 3, position = position_nudge(y = 1.5)) +
+            labs(x = "Age (months)",
+                 y = "Number of participants") +
             scale_colour_manual(values = clrs) +
+            scale_x_continuous(breaks = seq(0, 60, 2)) +
             theme(panel.grid.major.x = element_blank())
-    })
+    }, res = 125)
     
     output$responses_date_plot <- renderPlot({
         participants %>%
             filter(between(age, input$participants_age[1], input$participants_age[2]),
-                   between(time_stamp, input$participants_time_stamp[1], input$participants_time_stamp[2]),
+                   between(date_finished, input$participants_date_finished[1], input$participants_date_finished[2]),
                    lp %in% input$participants_lp) %>%
-            count(time_stamp, lp) %>%
-            group_by(lp) %>%
-            mutate(n = cumsum(n)) %>%
-            ungroup() %>%
-            ggplot(aes(time_stamp, n, colour = lp)) +
+            count(date_finished, lp) %>%
+            mutate(n = cumsum(n), .by = lp) %>%
+            ggplot(aes(date_finished, n, colour = lp)) +
             geom_line(aes(group = lp), linewidth = 1) +
-            scale_colour_manual(values = clrs[c(1, 4, 5)])
-    }, res = 100)
+            labs(x = "Date",
+                 y = "Number of participants",
+                 colour = "Group") +
+            scale_colour_manual(values = clrs[c(1, 4, 5)]) +
+            scale_x_date(date_labels = "%Y %b",
+                         date_breaks = "6 months") +
+            theme(legend.position = "top",
+                  legend.title = element_blank(),
+                  legend.key.width = unit(1, "cm"),
+                  axis.title.x = element_blank())
+    }, res = 150)
     
     output$items_plot_n_phon <- renderPlot({
         items %>%
@@ -55,7 +65,7 @@ server <- function(input, output) {
             scale_y_continuous(labels = percent) +
             theme(legend.position = "none")
         
-    }, res = 100)
+    }, res = 150)
     
     output$items_plot_n_syll <- renderPlot({
         items %>%
@@ -84,7 +94,7 @@ server <- function(input, output) {
             scale_y_continuous(labels = percent) +
             theme(legend.position = "none")
         
-    }, res = 100)
+    }, res = 150)
     
     output$items_plot_lv <- renderPlot({
         items %>%
@@ -93,7 +103,7 @@ server <- function(input, output) {
                    semantic_category %in% input$items_semantic_category) |>
             select(te, lv) |> 
             ggplot(aes(lv)) +
-            stat_slab(colour = "white",
+            tidybayes::stat_slab(colour = "white",
                       fill = clrs[2]) +
             labs(x = "Cognateness (Levenshtein similarity)",
                  y = "Proportion of words") +
@@ -101,7 +111,7 @@ server <- function(input, output) {
             scale_y_continuous(labels = percent) +
             theme(legend.position = "none")
         
-    }, res = 100)
+    }, res = 150)
     
     output$items_plot_class <- renderPlot({
         items %>%
@@ -125,7 +135,7 @@ server <- function(input, output) {
             theme(legend.position = "none",
                   axis.title.x = element_blank())
         
-    }, res = 100)
+    }, res = 150)
     
     output$items_plot_semantic_category <- renderPlot({
         items %>%
@@ -157,7 +167,7 @@ server <- function(input, output) {
                                                     linetype = "dotted"),
                   axis.title.x = element_blank())
         
-    }, res = 100)
+    }, res = 110)
     
     output$items_table <- renderDT({
         items %>%
@@ -168,11 +178,11 @@ server <- function(input, output) {
                    semantic_category %in% input$items_semantic_category) |>
             select(te, language, label, ipa, lv, class, semantic_category) |> 
             mutate(label = paste0(label, " (/", ipa, "/)")) |> 
-            pivot_wider(id_cols = c(te, class, semantic_category, lv),
+            tidyr::pivot_wider(id_cols = c(te, class, semantic_category, lv),
                         names_from = language,
                         values_from = label,
                         names_repair = make_clean_names) |> 
-            drop_na() |> 
+            tidyr::drop_na() |> 
             relocate(te,
                      class,
                      semantic_category,

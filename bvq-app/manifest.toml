@@ -1,5 +1,3 @@
-data/bvq.rds
-data/fit.rds
 data/items.rds
 data/participants.rds
 data/posterior/*

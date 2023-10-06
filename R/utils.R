@@ -35,34 +35,39 @@ unmake <- function(remove_targets = TRUE,
             }
         }
     })
-    
-    cli_alert_success("Removed project outputs")
+    cli::cli_alert_success("Removed project outputs")
 }
 
 #' Deploy app
+#' 
 deploy <- function() {
-    deployApp("bvq-app",
-              # appFileManifest = "bvq-app/manifest.toml",
-              appName = "bvq-app",
-              launch.browser = TRUE)
+    job::job(packages = "rsconnect",
+             {
+                 rsconnect::deployApp("bvq-app",
+                                      # appFileManifest = "bvq-app/manifest.toml",
+                                      appName = "bvq-app",
+                                      launch.browser = TRUE, 
+                                      account = "gongcastro",  
+                                      forceUpdate = TRUE)
+             })
 }
 
 #' Resolve NAMESPACE conflicts
 #'
 resolve_conflicts <- function() {
     suppressMessages({
-        conflict_prefer("last_warnings", "rlang")
-        conflict_prefer("filter", "dplyr")
-        conflict_prefer("between", "dplyr")
-        conflict_prefer("timestamp", "utils")
-        conflict_prefer("ar", "brms")
-        conflict_prefer("chisq.test", "stats")
-        conflict_prefer("discard", "scales")
-        conflict_prefer("duration", "lubridate")
-        conflict_prefer("fisher.test", "stats")
-        conflict_prefer("lag", "dplyr")
+        conflicted::conflict_prefer("last_warnings", "rlang")
+        conflicted::conflict_prefer("filter", "dplyr")
+        conflicted::conflict_prefer("between", "dplyr")
+        conflicted::conflict_prefer("timestamp", "utils")
+        conflicted::conflict_prefer("ar", "brms")
+        conflicted::conflict_prefer("chisq.test", "stats")
+        conflicted::conflict_prefer("discard", "scales")
+        conflicted::conflict_prefer("duration", "lubridate")
+        conflicted::conflict_prefer("fisher.test", "stats")
+        conflicted::conflict_prefer("lag", "dplyr")
     })
-    cli_alert_success("Resolved conflicts")
+    cli::cli_alert_success("Resolved conflicts")
 }
 
 #' Custom ggplot2 theme
@@ -81,7 +86,7 @@ theme_custom <- function() {
 #' @param x Age in months
 #' @param .sep Separator between years and months, ';' by default
 months_to_years <- function(x, .sep = ";") {
-    glue(floor(x %/% 12),
+    glue::glue(floor(x %/% 12),
          floor(x %% 12),
          .sep = .sep)
 }
@@ -91,13 +96,13 @@ months_to_years <- function(x, .sep = ";") {
 #' @param x Time in days
 #' @param .sep Separator between months and days, ';' by default
 days_to_months <- function(x, .sep = ";") {
-    glue(floor(x %/% 30),
+    glue::glue(floor(x %/% 30),
          floor(x %% 30),
          .sep = .sep)
 }
 
 deploy <- function() {
-    deployApp("bvq-app",
+    rstudioconnect::deployApp("bvq-app",
               appFileManifest = "bvq-app/manifest.toml",
               appName = "bvq-app",
               launch.browser = TRUE)
@@ -204,7 +209,7 @@ get_childes_frequencies <- function(collection = "Eng-NA",
             "Student"
         )
         
-        counts <- get_types(collection = collection, role = roles, ...)
+        counts <- childesr::get_types(collection = collection, role = roles, ...)
         
         speaker_ids <- distinct(counts,
                                 collection_id,
@@ -214,7 +219,7 @@ get_childes_frequencies <- function(collection = "Eng-NA",
         
         speakers <- speaker_ids |>
             left_join(
-                get_speaker_statistics(collection = collection),
+                childesr::get_speaker_statistics(collection = collection),
                 by = c("collection_id",
                        "corpus_id", 
                        "speaker_id", 
@@ -237,21 +242,19 @@ get_childes_frequencies <- function(collection = "Eng-NA",
                 age_bin = as.integer(floor(age_months / 6) * 6),
                 token = tolower(gloss)
             ) |>
-            group_by(age_bin, token, target_child_id, transcript_id) |>
             summarise(
                 transcript_count = sum(count),
                 transcript_num_tokens = sum(num_tokens),
-                .groups = "drop"
+                .by = c(age_bin, token, target_child_id, transcript_id)
             ) |>
             filter(between(age_bin,
                            age_range[1],
                            age_range[2])) |>
-            group_by(token) |>
             summarise(
                 freq_count = mean(transcript_count),
                 total_count = mean(transcript_num_tokens),
                 n_children = length(unique(target_child_id)),
-                .groups = "drop"
+                .by = token
             ) |>
             mutate(
                 freq_million = freq_count / total_count * 1e6,
@@ -300,35 +303,35 @@ save_files <- function(x,
                        .sep = "/") {
     # check arguments
     if (!all(formats %in% c("parquet", "csv", "rds"))) {
-        cli_abort("formats must be 'parquet', 'csv' or 'rds'")
+        cli::cli_abort("formats must be 'parquet', 'csv' or 'rds'")
     }
     
     # create directories if missing
-    dirs <- glue("{folder}{.sep}{formats}")
+    dirs <-glue::glue("{folder}{.sep}{formats}")
     dirs_exist <- dir.exists(dirs)
     if (any(!dirs_exist)) {
         missing_dir <-
             glue("{folder}{.sep}{formats[which(!dirs_exist)]}{.sep}")
         invisible(map(missing_dir, dir.create))
-        cli_alert_warning("Created {.path {missing_dir}}")
+        cli::cli_alert_warning("Created {.path {missing_dir}}")
     }
     
     # save files
     file_paths <-
-        glue("{folder}{.sep}{formats}{.sep}{file_name}.{formats}")
-    write_csv_arrow(flatten_columns(x), file_paths[grepl(".parquet", file_paths)])
-    write_parquet(flatten_columns(x), file_paths[grepl(".csv", file_paths)])
+        glue::glue("{folder}{.sep}{formats}{.sep}{file_name}.{formats}")
+    arrow::write_csv_arrow(flatten_columns(x), file_paths[grepl(".parquet", file_paths)])
+    arrow::write_parquet(flatten_columns(x), file_paths[grepl(".csv", file_paths)])
     saveRDS(x, file_paths[grepl(".rds", file_paths)])
-    cli_alert_success("Saved to {.path {folder}}")
+    cli::cli_alert_success("Saved to {.path {folder}}")
 }
 
 remove_nul <- function() {
     paths <- c("manuscript", "docs")
     cur_path <- gsub("/", "\\\\", getwd())
-    nul_path <- glue("{cur_path}\\{paths}\\NUL.")
+    nul_path <- glue::glue("{cur_path}\\{paths}\\NUL.")
     file.exists(nul_path)
-    cmd1 <- glue("rename \\\\.\\{nul_path} delete.txt")
-    cmd2 <- glue("del \\\\.\\{nul_path}\\delete.txt")
+    cmd1 <- glue::glue("rename \\\\.\\{nul_path} delete.txt")
+    cmd2 <- glue::glue("del \\\\.\\{nul_path}\\delete.txt")
     lapply(cmd1, shell)
     lapply(cmd2, shell)
     shell(cmd2)

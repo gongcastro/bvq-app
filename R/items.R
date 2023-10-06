@@ -15,7 +15,7 @@ get_items <- function(bvq_data, .class = "Noun") {
     
     pool_tmp <- bvq_data$pool |>
         # drop items with missing observations in these variables
-        drop_na(ipa) |>
+        tidyr::drop_na(ipa) |>
         filter(n_lemmas == 1,
                # exclude items with more than two lemmas
                !is_multiword,
@@ -32,21 +32,21 @@ get_items <- function(bvq_data, .class = "Noun") {
     
     # compute Levenshtein distances
     lv_df <- pool_tmp |> 
-        pivot_wider(names_from = language, 
+        tidyr::pivot_wider(names_from = language, 
                     values_from = xsampa,
                     id_cols = te,
-                    names_repair = make_clean_names) |> 
-        mutate(lv = stringsim(catalan, spanish)) |> 
+                    names_repair = janitor::make_clean_names) |> 
+        mutate(lv = stringdist::stringsim(catalan, spanish)) |> 
         distinct(te, lv)
     
     # merge datasets
     items <- pool_tmp |>
         left_join(lv_df, by = join_by(te)) |> 
         rename(list = version) |>
-        drop_na(lv, list) |>
+        tidyr::drop_na(lv, list) |>
         mutate(n_phon = nchar(xsampa),
-               n_syll = map_int(syll, length),
-               item = str_remove(item, "cat_|spa_")) |>
+               n_syll = purrr::map_int(syll, length),
+               item = stringr::str_remove(item, "cat_|spa_")) |>
         select(te, language, item, label, ipa, lv, n_phon, n_syll,
                class, semantic_category) |>
         arrange(te)
@@ -54,7 +54,7 @@ get_items <- function(bvq_data, .class = "Noun") {
     # export to data folder
     save_files(items, folder = "data")
     
-    saveRDS(items, "bvq-app/data/items.rds")
+    saveRDS(items, file.path("bvq-app", "data", "items.rds"))
     
     return(items)
 }

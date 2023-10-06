@@ -1,4 +1,4 @@
-// generated with brms 2.18.0
+// generated with brms 2.20.1
 functions {
   /* compute correlated group-level effects
    * Args:
@@ -66,6 +66,7 @@ data {
   int<lower=2> nthres; // number of thresholds
   int<lower=1> K; // number of population-level effects
   matrix[N, K] X; // population-level design matrix
+  int<lower=1> Kc; // number of population-level effects after centering
   // data for group-level effects of ID 1
   int<lower=1> N_1; // number of grouping levels
   int<lower=1> M_1; // number of coefficients per level
@@ -89,7 +90,6 @@ data {
   int prior_only; // should the likelihood be ignored?
 }
 transformed data {
-  int Kc = K;
   matrix[N, Kc] Xc; // centered version of X
   vector[Kc] means_X; // column means of X before centering
   for (i in 1 : K) {
@@ -98,7 +98,7 @@ transformed data {
   }
 }
 parameters {
-  vector[Kc] b; // population-level effects
+  vector[Kc] b; // regression coefficients
   ordered[nthres] Intercept; // temporary thresholds for centered predictors
   vector<lower=0>[M_1] sd_1; // group-level standard deviations
   matrix[M_1, N_1] z_1; // standardized group-level effects
@@ -175,16 +175,6 @@ generated quantities {
   // compute group-level correlations
   corr_matrix[M_2] Cor_2 = multiply_lower_tri_self_transpose(L_2);
   vector<lower=-1, upper=1>[NC_2] cor_2;
-  // additionally sample draws from priors
-  real prior_b__1 = normal_rng(1, 0.25);
-  real prior_b__2 = normal_rng(0, 0.25);
-  real prior_b__3 = normal_rng(0, 0.25);
-  real prior_b__4 = normal_rng(0, 0.25);
-  real prior_Intercept = normal_rng(-0.25, 0.1);
-  real prior_sd_1 = normal_rng(1, 0.1);
-  real prior_cor_1 = lkj_corr_rng(M_1, 2)[1, 2];
-  real prior_sd_2 = normal_rng(1, 0.1);
-  real prior_cor_2 = lkj_corr_rng(M_2, 2)[1, 2];
   // extract upper diagonal of correlation matrix
   for (k in 1 : M_1) {
     for (j in 1 : (k - 1)) {
@@ -196,13 +186,6 @@ generated quantities {
     for (j in 1 : (k - 1)) {
       cor_2[choose(k - 1, 2) + j] = Cor_2[j, k];
     }
-  }
-  // use rejection sampling for truncated priors
-  while (prior_sd_1 < 0) {
-    prior_sd_1 = normal_rng(1, 0.1);
-  }
-  while (prior_sd_2 < 0) {
-    prior_sd_2 = normal_rng(1, 0.1);
   }
 }
 

@@ -1,5 +1,4 @@
-bvq-app
-================
+# bvq-app
 
 # Barcelona Vocabulary Questionnaire (BVQ) <a href="gongcastro.github.io/bvq-app"><img src="gongcastro.github.io/bvqdev/man/figures/logo.png" align="right" height="139" /></a>
 

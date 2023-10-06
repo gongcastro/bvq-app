@@ -1,50 +1,14 @@
 library(targets)
 library(tarchetypes)
-library(conflicted)
-library(cli)
+library(brms)
+library(cmdstanr)
+library(bvq)
+library(dplyr)
 
 # load R functions -------------------------------------------------------------
 function_paths <- invisible({
     lapply(list.files("R", pattern = ".R", full.names = TRUE), source)
 })
-
-# list package dependencies ----------------------------------------------------
-tar_option_set(
-    packages = c(
-        "arrow",
-        "bayesplot",
-        "bayestestR",
-        "brms",
-        "bvqdev",
-        "childesr",
-        "cli",
-        "conflicted",
-        "dplyr",
-        "ggplot2",
-        "glue",
-        "ipa",
-        "janitor",
-        "knitr",
-        "keyring",
-        "knitr",
-        "lubridate",
-        "marginaleffects",
-        "patchwork",
-        "purrr",
-        "quarto",
-        "readxl",
-        "rlang",
-        "rsconnect",
-        "scales",
-        "shiny",
-        "stringdist",
-        "stringr",
-        "tibble",
-        "tidybayes",
-        "tidyr",
-        "usethis"
-    )
-)
 
 resolve_conflicts()
 
@@ -116,13 +80,12 @@ list(
     
     tar_target(
         model_fit,
-        fit_model(
-            name = "fit",
+        fit_model(name = "fit",
             formula = model_formula,
             data = responses,
+            is_prior = FALSE,
             prior = model_prior,
-            sample_prior = "yes"
-        )
+            sample_prior = "yes")
     ),
     
     tar_target(
@@ -131,6 +94,7 @@ list(
                   formula = model_formula,
                   data = responses,
                   prior = model_prior,
+                  is_prior = TRUE,
                   sample_prior = "only")
     ),
     
@@ -192,9 +156,9 @@ list(
     #     }
     # ),
     # 
-    tar_quarto(docs_index, path = "docs/index.qmd"),
+    tar_quarto(docs_index, path = file.path("docs", "index.qmd")),
     
-    tar_quarto(docs_model, path = "docs/model.qmd"),
+    tar_quarto(docs_model, path = file.path("docs", "model.qmd")),
     
     tar_target(
         copy_files,

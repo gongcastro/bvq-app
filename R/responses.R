@@ -1,18 +1,19 @@
 
 #' Prepare data for analyses
 #' 
-#' @param bvq_data A named list resulting from calling \code{get_bvq}
-#' @param items A data frame resulting from calling \code{get_items}
-#' @param participants A data frame resulting from calling \code{get_participants}
+#' @param bvq_data A named list resulting from calling [get_bvq()]
+#' @param items A data frame resulting from calling [get_items()]
+#' @param participants A data frame resulting from calling [get_participants()]
 get_responses <- function(bvq_data, items, participants) {
     # merge all datasets
     responses_tmp <- bvq_data$responses |>
         mutate(time = as.integer(time),
-               item = str_remove(item, "cat_|spa_")) |>
+               language = ifelse(grepl("cat_", item), "Catalan", "Spanish"),
+               item = stringr::str_remove(item, "cat_|spa_")) |>
         # drop missing responses
         # by default datasets are expanded so that every participant has rows for all items,
         # even for those that were not included in their version of the questionnaire
-        drop_na(response) |>
+        tidyr::drop_na(response) |>
         rename(id_bvq = id) |>
         inner_join(distinct(participants, id, id_bvq),
                    by = join_by(id_bvq)) |>
@@ -20,9 +21,10 @@ get_responses <- function(bvq_data, items, participants) {
         arrange(id, time)
     
     responses <- responses_tmp |> 
-        inner_join(items, by = join_by(language, item)) |> 
+        inner_join(items, by = join_by(language, item),
+                   multiple = "first") |> 
         inner_join(participants,
-                  by = join_by(id, time)) |>
+                   by = join_by(id, time)) |>
         mutate(
             # code responses as factor
             response = factor(response,
@@ -52,7 +54,7 @@ get_responses <- function(bvq_data, items, participants) {
     
     # export data
     save_files(responses, folder = "data")
-        write_dataset(responses, 
+    arrow::write_dataset(responses, 
                   path = "bvq-app/data/responses",
                   format = "parquet",
                   partitioning = c("id"))

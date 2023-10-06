@@ -1,10 +1,7 @@
 #' Get BVQ data
 #' @param ... Arguments to be passed to [bvqdev::bvq_responses()]
 #' @returns A named list of data frames containing questionnaire responses, participant data, and item data from BVQ
-get_bvq <- function(...) {
-    
-    bvq_connect()
-    
+get_bvq <- function(...) {    
     # get participant data
     p <- bvq_participants()
     
@@ -30,16 +27,16 @@ get_bvq <- function(...) {
             # recode it as factor
             edu_parent = factor(edu_parent, levels = 1:6, labels = edu_levels)
         ) |>
-        select(id, id_bvq, time, time_stamp,
+        select(id, id_bvq, time, date_finished,
                age, lp, dominance, edu_parent,
                version, completed,
                doe_catalan, doe_spanish, doe_others)
     
     pool <- bvqdev::pool |>
-        mutate(ipa = xsampa(xsampa, "ipa"),
-               xsampa = str_remove_all(xsampa, '\\\"|\\.'),
+        mutate(ipa = ipa::xsampa(xsampa, "ipa"),
+               xsampa = stringr::str_remove_all(xsampa, '\\\"|\\.'),
                syll = strsplit(ipa, 'ˈ|\\.') |> 
-                   map(\(x) x[x != ""]))
+                   purrr::map(\(x) x[x != ""]))
     
     v <- bvq_vocabulary(p, r)
     
@@ -55,7 +52,7 @@ get_bvq <- function(...) {
     
     attr(bvq_data, "updated") <- Sys.time()
     
-    saveRDS(bvq_data, "bvq-app/data/bvq.rds")
+    saveRDS(bvq_data, file.path("bvq-app", "data", "bvq.rds"))
     
     return(bvq_data)
 }

@@ -1,5 +1,13 @@
-docker_build:
+run:
+	Rscript -e "shiny::runApp('bvq-app')"
+
+renv:
+	Rscript -e "renv::restore()"
+targets:
+	Rscript -e "targets::tar_make()"
+
+docker-build:
 	docker build -t bvq-app .
 
-docker_container:
+docker-run:
 	docker run --rm -p 3838:3838 bvq-app

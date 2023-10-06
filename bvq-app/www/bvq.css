@@ -1,0 +1,39 @@
+/* Get a fancy font from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Righteous&display=swap');
+
+body {
+  background-color: white;
+  color: black; /* text color */
+  font-size: 15px;
+}
+
+h1 {
+    font-family: 'Righteous';
+}
+
+/* Change header text to imported font */
+h2 {
+  font-family: 'Roboto Slab';
+}
+
+.li {
+    color: black;
+}
+/* Make text visible on inputs */
+.shiny-input-container {
+  color: black;
+  font-size: 15px;
+}
+
+.tabbable {
+    font-size: 15px;
+}
+
+.navbar{ 
+  background-color: white;
+  min-height:25px !important;
+  font-family: 'Righteous';
+  color: black;
+  font-size: 17px;
+}
+
