@@ -1,12 +1,3 @@
-if ("renv" %in% row.names(utils::installed.packages())) {
-    source("renv/activate.R")
-    source("src/utils.R")
-}
-
-if ("targets" %in% row.names(utils::installed.packages())) {
-    library(targets)
-}
-
 options(shiny.launch.browser = TRUE,
         shiny.usecairo = TRUE,
         shiny.maxRequestSize = 500*1024^2,

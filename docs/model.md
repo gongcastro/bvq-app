@@ -1,5 +1,4 @@
-Model
-================
+# Model
 
 We used multilevel ordinal regression to model the cumulative
 probability of a *No* response, a *Understands* response, or a

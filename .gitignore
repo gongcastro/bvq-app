@@ -40,6 +40,10 @@ vignettes/*.pdf
 
 # data and results
 bvq-app/data/
+bvq-app/data-raw/
+data/*.rds
+data/epreds/*
+data/responses/*
 results/posterior/csv/*.csv
 
 results/posterior/csv/*.csv

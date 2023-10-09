@@ -1,6 +1,6 @@
 #' Get participant-level data
 #'
-#' @param bvq_data A named list resulting from calling \code{get_bvq}
+#' @param bvq_data A named list resulting from calling [bvq::get_bvq]
 #' @param longitudinal Should longitudinal data be included? If "all" (default), all responses (including repeated measures) are included. If "no", participants with more than one responses to the questionnaire (regardless of the version) are excluded. If "first", only the first response of each participant is included. If "last", only the last response of each participant is included. If "only", only responses with repeated measures are included.
 #' @param age Numeric vector of length two indicating the minimum and maximum age of participants that will be included in the resulting dataset.
 #' @param lp Character vector indicating the language profile (LP) of the participants that will be included in the resulting dataset. In takes "Monolingual", "Bilingual", and/or "Other" as values.
@@ -10,44 +10,35 @@ get_participants <- function(bvq_data,
                              age = c(10, 36),
                              lp = c("Monolingual", "Bilingual"),
                              other_threshold = 0.1) {
-    
+
     participants <- bvq_data$logs |>
-        filter(
-            completed,
+        dplyr::filter(
             # get only short versions of the questionnaire
-            str_detect(version, "Lockdown|Short"),
+            version %in% c("bvq-1.0.0", "bvq-short", "bvq-lockdown"),
             # get only data from complete questionnaire responses
             # rlang::.env makes sure we use the objects provided in the arguments
             # of the function, and not variables in the piped data frame
             lp %in% .env$lp,
             between(age, .env$age[1], .env$age[2]),
             sum(doe_catalan + doe_spanish) > .env$other_threshold,
-            id_bvq != "bilexicon_1699",
+            child_id!="57908",
             # exclude participants (duplicated entry)
             # make sure that degrees of exposure are between 0 and 1
             between(doe_spanish, 0, 1),
             between(doe_catalan, 0, 1),
             between(doe_others, 0, 1)
         ) |>
-        mutate(time = as.integer(time)) |> 
+        mutate(time = as.integer(time)) |>
         # see ?multilex::get_longitudinal
-        get_longitudinal(longitudinal = longitudinal) |>
-        mutate(id = as.integer(as.factor(id_bvq))) |>  # make ID shorter
-        select(id,
-               id_bvq,
-               time,
-               time_stamp,
-               age,
-               lp,
-               doe_catalan,
-               doe_spanish,
-               edu_parent) |> 
-        arrange(id)
-    
+        bvq::get_longitudinal(longitudinal = longitudinal) |>
+        select(child_id, response_id, time, date_finished,
+               age, lp, doe_catalan, doe_spanish, edu_parent) |>
+        arrange(date_finished)
+
     # export data
     save_files(participants, folder = "data")
-    
-    saveRDS(participants, "bvq-app/data/participants.rds")
-    
+
+    saveRDS(participants, file.path("bvq-app", "data", "participants.rds"))
+
     return(participants)
 }

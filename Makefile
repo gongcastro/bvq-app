@@ -8,3 +8,5 @@ docker-build:
 docker-run:
 	@docker run --rm -p 3838:3838 bvq-app
 
+bvq:
+	Rscript -e "source('R/bvq.R'); get_bvq()"

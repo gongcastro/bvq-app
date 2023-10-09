@@ -11,21 +11,21 @@ make <- function() {
 }
 
 # remove targets products
-unmake <- function(remove_targets = TRUE, 
+unmake <- function(remove_targets = TRUE,
                    remove_md = TRUE,
                    remove_fits = FALSE) {
     invisible({
         if (remove_targets) {
-            tar_destroy(ask = FALSE)
+            targets::tar_destroy(ask = FALSE)
         }
-        
+
         if (remove_md) {
-            lapply(list.files("bvq-app/docs", 
-                              pattern = "\\.md", 
-                              full.names = TRUE), 
+            lapply(list.files("bvq-app/docs",
+                              pattern = "\\.md",
+                              full.names = TRUE),
                    file.remove)
         }
-        
+
         if (remove_fits) {
             filenames <- list.files("results",
                                     pattern = "fit",
@@ -35,8 +35,8 @@ unmake <- function(remove_targets = TRUE,
             }
         }
     })
-    
-    cli_alert_success("Removed project outputs")
+
+    cli::cli_alert_success("Removed project outputs")
 }
 
 #' Deploy app
@@ -150,7 +150,7 @@ prop_adj_ci <- function(y, n, .width = 0.95, limit) {
         prop + qnorm(c((1 - .width) / 2, (1 - (1 - .width) / 2))) * se
     ci[1] <- ifelse(ci[1] < 0, 0, ci[1]) # truncate at 0
     ci[2] <- ifelse(ci[2] > 1, 1, ci[2]) # truncate at 1
-    
+
     if (limit == ".lower")
         return(ci[1])
     if (limit == ".upper")
@@ -170,9 +170,9 @@ get_aoa <- function(preds, ...) {
         filter(.category != "No") |>
         select(-.epred) |>
         distinct(..., aoa)
-    
+
     return(aoas)
-    
+
 }
 
 
@@ -184,9 +184,9 @@ get_aoa <- function(preds, ...) {
 get_childes_frequencies <- function(collection = "Eng-NA",
                                     age_range = c(10, 36),
                                     ...) {
-    
+
     suppressMessages({
-        
+
         roles <- c(
             "Mother",
             "Father",
@@ -203,33 +203,33 @@ get_childes_frequencies <- function(collection = "Eng-NA",
             "Teacher",
             "Student"
         )
-        
+
         counts <- get_types(collection = collection, role = roles, ...)
-        
+
         speaker_ids <- distinct(counts,
                                 collection_id,
                                 corpus_id,
                                 transcript_id,
                                 speaker_id)
-        
+
         speakers <- speaker_ids |>
             left_join(
                 get_speaker_statistics(collection = collection),
                 by = c("collection_id",
-                       "corpus_id", 
-                       "speaker_id", 
+                       "corpus_id",
+                       "speaker_id",
                        "transcript_id")) |>
             select(collection_id,
                    corpus_id,
                    transcript_id,
                    speaker_id,
                    num_tokens)
-        
+
         childes <- counts |>
             left_join(speakers,
-                      by = c("collection_id", 
+                      by = c("collection_id",
                              "corpus_id",
-                             "speaker_id", 
+                             "speaker_id",
                              "transcript_id")) |>
             mutate(
                 id = as.character(id),
@@ -262,9 +262,9 @@ get_childes_frequencies <- function(collection = "Eng-NA",
                      freq_count,
                      freq_million,
                      freq_zipf)
-        
+
     })
-    
+
     return(childes)
 }
 
@@ -302,7 +302,7 @@ save_files <- function(x,
     if (!all(formats %in% c("parquet", "csv", "rds"))) {
         cli_abort("formats must be 'parquet', 'csv' or 'rds'")
     }
-    
+
     # create directories if missing
     dirs <- glue("{folder}{.sep}{formats}")
     dirs_exist <- dir.exists(dirs)
@@ -312,7 +312,7 @@ save_files <- function(x,
         invisible(map(missing_dir, dir.create))
         cli_alert_warning("Created {.path {missing_dir}}")
     }
-    
+
     # save files
     file_paths <-
         glue("{folder}{.sep}{formats}{.sep}{file_name}.{formats}")
