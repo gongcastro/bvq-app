@@ -13,6 +13,7 @@ ui <- fluidPage(
         tabHome(),
         tabParticipants(),
         tabItems(),
-        tabPredictions()
+        tabPredictions(),
+        tabModel()
     )
 )

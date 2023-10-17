@@ -1,14 +1,17 @@
-library(shiny)
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-library(Cairo)
-library(ggdist)
-library(arrow)
-library(markdown)
-library(janitor)
-library(scales)
-library(DT)
+suppressMessages({
+    suppressWarnings({
+        library(shiny)
+        library(dplyr)
+        library(tidyr)
+        library(ggplot2)
+        library(Cairo)
+        library(ggdist)
+        library(arrow)
+        library(janitor)
+        library(scales)
+        library(DT)
+    })
+})
 
 # load functions ---------------------------------------------------------------
 source("helpers.R")
@@ -50,9 +53,9 @@ te_labels_df <-  responses |>
     inner_join(select(items, te, language, label)) |> 
     collect() |> 
     tidyr::pivot_wider(names_from = language,
-                values_from = label,
-                values_fn = first,
-                names_repair = make_clean_names) |> 
+                       values_from = label,
+                       values_fn = first,
+                       names_repair = make_clean_names) |> 
     mutate(label = paste0(catalan, " / ", spanish)) |> 
     tidyr::drop_na(catalan, spanish) |> 
     select(te, label) |> 
