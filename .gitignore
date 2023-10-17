@@ -54,3 +54,5 @@ results/fits/*.rds
 data/
 _targets/
 
+
+/.quarto/

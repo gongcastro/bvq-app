@@ -1,0 +1,15 @@
+project:
+  render:
+    - bvq-app/docs/index.qmd
+    - bvq-app/docs/model.qmd
+
+toc: false
+number-sections: false
+bibliography: assets/references.bib  
+  
+format:
+  gfm:
+    from: markdown+emoji
+  # html:
+  #   css: bvq-app/www/bvq.css
+  #   html-math-method: katex

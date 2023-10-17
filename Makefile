@@ -1,8 +1,12 @@
-run:
+render:
+	quarto render
+
+run: render
 	Rscript -e "shiny::runApp('bvq-app')"
 
 renv:
 	Rscript -e "renv::restore()"
+	
 targets:
 	Rscript -e "targets::tar_make()"
 
