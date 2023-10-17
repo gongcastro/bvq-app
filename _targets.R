@@ -4,13 +4,13 @@ library(brms)
 library(cmdstanr)
 library(bvq)
 library(dplyr)
+library(tidyr)
+library(collapse)
 
 # load R functions -------------------------------------------------------------
 function_paths <- invisible({
     lapply(list.files("R", pattern = ".R", full.names = TRUE), source)
 })
-
-resolve_conflicts()
 
 # define global options --------------------------------------------------------
 options(mc.cores = 4,
@@ -20,9 +20,6 @@ options(mc.cores = 4,
         loo.cores = 1)
 
 list(
-    ## resolve namespace conflicts ---------------------------------------------
-    tar_target(namespace_conficts, resolve_conflicts()),
-    
     ## import data -------------------------------------------------------------
     tar_target(bvq_data, get_bvq(update = TRUE, longitudinal = "all")),
     
@@ -55,7 +52,7 @@ list(
         c(
             prior(normal(-0.25, 0.1), class = "Intercept"),
             prior(normal(1, 0.1), class = "sd", group = "te"),
-            prior(normal(1, 0.1), class = "sd", group = "id"),
+            prior(normal(1, 0.1), class = "sd", group = "child_id"),
             prior(lkj(2), class = "cor"),
             prior(normal(1, 0.25), class = "b", coef = "age_std"),
             prior(normal(0, 0.25), class = "b", coef = "lp1"),
@@ -73,24 +70,24 @@ list(
     # and adjusted for each individual participant and item (group-level effects)
     tar_target(model_formula,
                bf(response ~ age_std + lp * dominance +
-                      (1 + age_std + dominance | id) +
+                      (1 + age_std + dominance | child_id) +
                       (1 + age_std + lp * dominance | te),
-                  family = cumulative(link = "logit"))
+                  family = cumulative(link = "logit",
+                                      threshold = "flexible"))
     ), # cumulative, continuation ratio
     
     tar_target(
         model_fit,
         fit_model(name = "fit",
-            formula = model_formula,
-            data = responses,
-            is_prior = FALSE,
-            prior = model_prior,
-            sample_prior = "yes")
-    ),
+                  formula = model_formula,
+                  data = responses,
+                  is_prior = FALSE,
+                  prior = model_prior,
+                  sample_prior = "yes")),
     
     tar_target(
         model_fit_prior,
-        fit_model(name = "fit",
+        fit_model(name = "fit_prior",
                   formula = model_formula,
                   data = responses,
                   prior = model_prior,
@@ -98,46 +95,42 @@ list(
                   sample_prior = "only")
     ),
     
-    tar_target(
-        posterior_draws,
-        get_posterior_draws(model_fit, data = responses)
+    tar_target(posterior_draws,
+               get_posterior_draws(model_fit, data = responses)
     ),
     
     ## marginal effects --------------------------------------------------------
     tar_target(
         predictions,
-        posterior_predictions(
-            model = model_fit,
-            responses, 
-            age_std = scale(seq(0, 50),
-                            mean(responses$age),
-                            sd(responses$age)),
-            dominance = c("L1", "L2"),
-            lp = c("Monolingual", "Bilingual")
+        posterior_predictions(model = model_fit,
+                              responses, 
+                              age_std = scale(seq(0, 50),
+                                              mean(responses$age),
+                                              sd(responses$age)),
+                              dominance = c("L1", "L2"),
+                              lp = c("Monolingual", "Bilingual")
         )
     ),
     
     tar_target(
         predictions_te,
-        posterior_predictions_re(
-            model = model_fit,
-            responses, 
-            group = "te",
-            age_std = scale(seq(0, 50, 1),
-                            mean(responses$age),
-                            sd(responses$age)),
-            dominance = c("L1", "L2"),
-            lp = c("Monolingual", "Bilingual")
+        posterior_predictions_re(model = model_fit,
+                                 responses, 
+                                 group = "te",
+                                 age_std = scale(seq(0, 50, 1),
+                                                 mean(responses$age),
+                                                 sd(responses$age)),
+                                 dominance = c("L1", "L2"),
+                                 lp = c("Monolingual", "Bilingual")
         )
     ),
     
     tar_target(
         predictions_id,
-        posterior_predictions_re(
-            model = model_fit,
-            responses, 
-            group = "id",
-            dominance = c("L1", "L2")
+        posterior_predictions_re(model = model_fit,
+                                 responses, 
+                                 group = "child_id",
+                                 dominance = c("L1", "L2")
         )
     ),
     

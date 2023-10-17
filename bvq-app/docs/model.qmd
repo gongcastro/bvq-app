@@ -1,4 +1,3 @@
-
 # Model structure
 
 We used multilevel ordinal regression to model the cumulative
@@ -36,7 +35,7 @@ each translation equivalent was responded to by multiple participants
 (Gelman, Hill, and Vehtari 2020). For both grouping variables, we
 included random intercepts, random slopes, and correlation parameters
 for all predictors were repeated measures were observed in our dataset
-(Barr et al. 2013).
+(Barr et al. 2013).
 
 $$
 \begin{aligned}
@@ -67,8 +66,8 @@ where:
 
 ## Parameter estimation
 
-We used the **Bayesian framework** to estimate the parameters in our
-model. This involves using the Bayes theorem to compute a distribution
+We used the **Bayesian framework** to estimate the parameters in our model.
+This involves using the Bayes theorem to compute a distribution
 (*posterior distribution*) that describes what values of each parameter
 in the model are more likely given the data (*likelihood*), and previous
 knowledge about such distribution (*prior distribution*) (McElreath
@@ -142,7 +141,7 @@ where:
   distribution](https://mc-stan.org/docs/2_22/functions-reference/lkj-correlation.html)
   (Lewandowski, Kurowicka, and Joe 2009).
 
-## References
+## References 
 
 <div id="refs" class="references csl-bib-body hanging-indent">
 

@@ -1,5 +1,5 @@
 #' Get BVQ data
-#' @param ... Arguments to be passed to [bvqdev::bvq_responses()]
+#' @param ... Arguments to be passed to [bvq::bvq_responses()]
 #' @returns A named list of data frames containing questionnaire responses, participant data, and item data from BVQ
 get_bvq <- function(...) {    
     # get participant data
@@ -17,22 +17,20 @@ get_bvq <- function(...) {
                     "university" = "University")
     
     l <- bvq_logs(p, r) |>
-        mutate(id_bvq = id) |> 
-        mutate(
-            across(starts_with("edu_"), ~ as.numeric(
-                factor(.x, levels = names(edu_levels), ordered = TRUE)
-            )),
-            # get maximum educational attainment of parents
-            edu_parent = apply(cbind(edu_parent1, edu_parent2), 1, max, na.rm = FALSE),
-            # recode it as factor
-            edu_parent = factor(edu_parent, levels = 1:6, labels = edu_levels)
-        ) |>
-        select(id, id_bvq, time, date_finished,
+        mutate(across(starts_with("edu_"),
+                      \(x) as.numeric(factor(x,
+                                             levels = names(edu_levels),
+                                             ordered = TRUE))),
+               # get maximum educational attainment of parents
+               edu_parent = apply(cbind(edu_parent1, edu_parent2), 1, max, na.rm = FALSE),
+               # recode it as factor
+               edu_parent = factor(edu_parent, levels = 1:6, labels = edu_levels)) |>
+        select(child_id, response_id, time, date_finished,
                age, lp, dominance, edu_parent,
-               version, completed,
+               version,
                doe_catalan, doe_spanish, doe_others)
     
-    pool <- bvqdev::pool |>
+    pool <- bvq::pool |>
         mutate(ipa = ipa::xsampa(xsampa, "ipa"),
                xsampa = stringr::str_remove_all(xsampa, '\\\"|\\.'),
                syll = strsplit(ipa, 'ˈ|\\.') |> 

@@ -14,27 +14,24 @@ get_responses <- function(bvq_data, items, participants) {
         # by default datasets are expanded so that every participant has rows for all items,
         # even for those that were not included in their version of the questionnaire
         tidyr::drop_na(response) |>
-        rename(id_bvq = id) |>
-        inner_join(distinct(participants, id, id_bvq),
-                   by = join_by(id_bvq)) |>
-        select(id, time, code, language, item, response) |> 
-        arrange(id, time)
+        inner_join(distinct(participants, child_id, response_id),
+                   by = join_by(child_id, response_id)) |>
+        select(child_id, response_id, time, language, item, response) |> 
+        arrange(child_id, time)
     
     responses <- responses_tmp |> 
         inner_join(items, by = join_by(language, item),
                    multiple = "first") |> 
         inner_join(participants,
-                   by = join_by(id, time)) |>
-        mutate(
-            # code responses as factor
-            response = factor(response,
+                   by = join_by(child_id, response_id, time)) |>
+        mutate(response = factor(response,
                               levels = c(1, 2, 3),
                               labels = c("No", 
                                          "Understands",
                                          "Understands and Says"),
                               ordered = TRUE),
             # does should have the value of the corresponding language
-            doe = ifelse(language == "Catalan", doe_catalan, doe_spanish),
+            doe = ifelse(language=="Catalan", doe_catalan, doe_spanish),
             # standardise numeric predictors
             across(c(lv, age, doe), 
                    \(x) scale(x)[, 1], 
@@ -44,10 +41,10 @@ get_responses <- function(bvq_data, items, participants) {
             across(c(lp, dominance), as.factor)
         ) |>
         # get only relevant variables
-        select(id, time, age, age_std, te, language, item, response, 
+        select(child_id, response_id, time, age, age_std, te, language, item, response, 
                lv, lv_std, lp, dominance) |>
         # reorder rows
-        arrange(id, te, language)
+        arrange(child_id, time, te, language)
     
     contrasts(responses$lp) <- c(0.5, -0.5)
     contrasts(responses$dominance) <- c(0.5, -0.5)
@@ -57,7 +54,7 @@ get_responses <- function(bvq_data, items, participants) {
     arrow::write_dataset(responses, 
                   path = "bvq-app/data/responses",
                   format = "parquet",
-                  partitioning = c("id"))
+                  partitioning = c("response_id"))
     
     return(responses)
     

@@ -1,18 +1,58 @@
-# bvq-app
 
-# Barcelona Vocabulary Questionnaire (BVQ) <a href="gongcastro.github.io/bvq-app"><img src="gongcastro.github.io/bvqdev/man/figures/logo.png" align="right" height="139" /></a>
-
-<!-- badges: start -->
-
-[![R-CMD-check](https://github.com/gongcastro/bvqdev/actions/workflows/check-standard.yaml/badge.svg)](https://github.com/gongcastro/bvqdev/actions/workflows/R-CMD-check.yaml)
+[![R-CMD-check](https://github.com/gongcastro/bvq/actions/workflows/check-standard.yaml/badge.svg)](https://github.com/gongcastro/bvq/actions/workflows/check-standard.yaml)
 [![Codecov test
-coverage](https://codecov.io/gh/gongcastro/bvqdev/branch/main/graph/badge.svg)](https://app.codecov.io/gh/gongcastro/bvqdev?branch=main)
+coverage](https://codecov.io/gh/gongcastro/bvq/branch/main/graph/badge.svg)](https://app.codecov.io/gh/gongcastro/bvqdev?branch=main)
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 ![GitHub
-issues](https://img.shields.io/github/issues/gongcastro/bvqdev.png)
-<!-- badges: end -->
+issues](https://img.shields.io/github/issues/gongcastro/bvq.png)
 
-This app shows the Barcelona Vocabulary Questionnaire (BVQ) database,
-with vocabulary data from monolingual and bilingual children living in
-the Metropolitan Area of Barcelona (Spain).
+## What is this app about?
+
+This app offers interactive visualisations of vocabulary data from
+monolingual and bilingual children living in the Metropolitan Area of
+Barcelona (Spain). This database has been collected using an online
+vocabulary questionnaire: the Barcelona Vocabulary Questionnaire (BVQ)
+which is aimed at to assessing lexical development in toddlers growing
+up in Catalan-Spanish bilingual environments. This questionnaire has
+been developed by Gonzalo Garcia-Castro, Daniela S. Avila Varela and
+Nuria Sebastian Galles at the Center for Brain and Cognition
+(Universitat Pompeu Fabra). The questionnaire was deployed using
+[formr](https://formr.org/), and the materials used to generate the
+items are available in the GitHub repository.
+
+## Installing the R package
+
+The accompanying R package, [`bvq`](https://gongcastro.github.io/bvq),
+offers an API to download, process, the data collected from the
+vocabulary questionnaires. This R package also contains multiple
+functions that extract the data and generate many metrics used
+frequently in the language acquisition literature to examine
+participants’ vocabulary or to consult acquisition norms of particular
+words. Documentation and working examples are available in the [package
+website](https://gongcastro.github.io/bvq). There are two ways of
+installing this package:
+
+From [r-universe](https://gongcastro.r-universe.dev/bvq) :rocket::
+
+``` r
+install.packages('bvq', repos = 'https://gongcastro.r-universe.dev')
+```
+
+From the GitHub repository:
+
+``` r
+install.packages("remotes") # you may need to install remotes first
+remotes::install_github("gongcastro/bvq")
+```
+
+<div>
+
+> **Data availability**
+>
+> BVQ is currently a developing package for internal use at the [Center
+> for Brain and Cognititon](https://www.upf.edu/web/cbc) (CBC). For this
+> reason, logging in requires a password that can be required by writing
+> to the maintainer of this package (<gongarciacastro@gmail.com>).
+
+</div>

@@ -52,23 +52,6 @@ deploy <- function() {
              })
 }
 
-#' Resolve NAMESPACE conflicts
-#'
-resolve_conflicts <- function() {
-    suppressMessages({
-        conflicted::conflict_prefer("last_warnings", "rlang")
-        conflicted::conflict_prefer("filter", "dplyr")
-        conflicted::conflict_prefer("between", "dplyr")
-        conflicted::conflict_prefer("timestamp", "utils")
-        conflicted::conflict_prefer("ar", "brms")
-        conflicted::conflict_prefer("chisq.test", "stats")
-        conflicted::conflict_prefer("discard", "scales")
-        conflicted::conflict_prefer("duration", "lubridate")
-        conflicted::conflict_prefer("fisher.test", "stats")
-        conflicted::conflict_prefer("lag", "dplyr")
-    })
-    cli::cli_alert_success("Resolved conflicts")
-}
 
 #' Custom ggplot2 theme
 theme_custom <- function() {
@@ -126,13 +109,6 @@ cut_age <- function(x) {
     return(y)
 }
 
-#' Adjusted estimated proportion of successes from Gelman, Hill & Vehtari (2020)
-#'
-#' @param y Number of successes
-#' @param n Number of trials
-prop_adj <- function(y, n) {
-    (y + 2) / (n + 4)
-}
 
 #' Standard error of the adjusted proportion of successes from Gelman, Hill & Vehtari (2020)
 #'

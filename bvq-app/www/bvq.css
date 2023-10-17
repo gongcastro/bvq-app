@@ -1,5 +1,6 @@
 /* Get a fancy font from Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Righteous&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
 
 body {
   background-color: white;
@@ -13,7 +14,11 @@ h1 {
 
 /* Change header text to imported font */
 h2 {
-  font-family: 'Roboto Slab';
+  font-family: 'Roboto';
+}
+
+p {
+  font-family: 'Roboto';
 }
 
 .li {
@@ -37,3 +42,18 @@ h2 {
   font-size: 17px;
 }
 
+blockquote {
+    background-color: #fadfac;
+    color: black;
+    font-size: 15px;
+    border-left: 10px solid #ffa600;
+    margin: 1.5em 10px;
+    padding: 0.5em 10px;
+    quotes: "\201C""\201D""\2018""\2019";
+}
+
+blockquote strong {
+    font-family: 'Righteous';
+    font-size: 17px;
+
+}

@@ -3,28 +3,28 @@
 #' @param ... Arguments to be passed to [brms::brm()]
 fit_model <- function(name, is_prior = FALSE, ...) {
     file_path <- ifelse(is_prior,
-        glue::glue("results/fits/{name}_prior.rds"),
-        glue::glue("results/fits/{name}.rds")
+                        glue::glue("results/fits/{name}_prior.rds"),
+                        glue::glue("results/fits/{name}.rds")
     )
-
+    
     # we run the model in the background as an RStudio job to keep the console free
     # see R/utils.R
     fit <- brm(...,
-        iter = 1e3L,
-        cores = 2L,
-        chains = 2L,
-        init = 0.5,
-        seed = 888,
-        backend = "cmdstanr",
-        file = file_path,
-        file_refit = "never",
-        control = list(
-            adapt_delta = 0.9,
-            max_treedepth = 15
-        ),
-        save_model = glue::glue("stan/{name}.stan")
+               iter = 1e3L,
+               cores = 2L,
+               chains = 2L,
+               init = 0.5,
+               seed = 888,
+               backend = "cmdstanr",
+               file = file_path,
+               file_refit = "on_change",
+               control = list(
+                   adapt_delta = 0.9,
+                   max_treedepth = 15
+               ),
+               save_model = glue::glue("stan/{name}.stan")
     )
-
+    
     return(fit)
 }
 
@@ -43,22 +43,22 @@ get_posterior_draws <- function(model, data, ...) {
         "b_dominance1" = "Dominance (L1 vs. L2)",
         "b_lp1:dominance1" = "Group \u00d7 Dominance"
     )
-
+    
     # posterior draws
     posterior <- tidybayes::gather_draws(model, `b_.*`, regex = TRUE) |>
         mutate(
             .variable_name = factor(.variable,
-                levels = names(str_repl),
-                labels = str_repl
+                                    levels = names(str_repl),
+                                    labels = str_repl
             ) |>
                 as.character(),
             type = ifelse(stringr::str_detect(.variable, "Intercept"),
-                "Intercepts (at 22 months)",
-                "Slopes"
+                          "Intercepts (at 22 months)",
+                          "Slopes"
             ),
             parameter = ifelse(stringr::str_detect(.variable, "Intercept"),
-                stringr::str_remove_all(.variable, "Intercept \\(|\\)"),
-                .variable
+                               stringr::str_remove_all(.variable, "Intercept \\(|\\)"),
+                               .variable
             )
         ) |>
         select(
@@ -66,14 +66,14 @@ get_posterior_draws <- function(model, data, ...) {
             .chain, .iteration, .draw, .value
         ) |>
         ungroup()
-
+    
     # export draws
     save_files(posterior, folder = "results/posterior")
     write_dataset(posterior,
-        path = "bvq-app/data/posterior",
-        format = "parquet",
-        partitioning = "variable"
+                  path = "bvq-app/data/posterior",
+                  format = "parquet",
+                  partitioning = "variable"
     )
-
+    
     return(posterior)
 }
