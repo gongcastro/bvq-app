@@ -38,6 +38,8 @@ vignettes/*.pdf
 # R Environment Variables
 .Renviron
 
+*.png
+
 # data and results
 bvq-app/data/
 results/**/*.csv
