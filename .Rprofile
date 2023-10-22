@@ -1,11 +1,7 @@
-# library(targets)
-# library(cli)
-# library(devtools)
-# library(shiny)
-# library(job)
+source(file.path("renv", "activate.R"))
+source(file.path("R", "utils.R"))
 
-source("renv/activate.R")
-source("R/utils.R")
+library(targets)
 
 options(crayon.enabled = TRUE,
         repos = c(CRAN = "https://cloud.r-project.org",

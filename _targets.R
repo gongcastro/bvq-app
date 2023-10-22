@@ -1,11 +1,18 @@
-library(targets)
-library(tarchetypes)
-library(brms)
-library(cmdstanr)
-library(bvq)
-library(dplyr)
-library(tidyr)
-library(collapse)
+suppressPackageStartupMessages({
+    suppressWarnings({
+        library(targets)
+        library(tarchetypes)
+        library(brms)
+        library(cmdstanr)
+        library(bvq)
+        library(dplyr)
+        library(tidyr)
+        library(collapse)
+        library(cli)
+        library(glue)
+        library(purrr)
+    })
+})
 
 # load R functions -------------------------------------------------------------
 function_paths <- invisible({

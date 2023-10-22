@@ -2,8 +2,12 @@ server <- function(input, output) {
     
     output$responses_age_plot <- renderPlot({
         participants %>%
-            filter(between(age, input$participants_age[1], input$participants_age[2]),
-                   between(date_finished, input$participants_date_finished[1], input$participants_date_finished[2]),
+            filter(between(age, 
+                           input$participants_age[1], 
+                           input$participants_age[2]),
+                   between(date_finished,
+                           input$participants_date_finished[1],
+                           input$participants_date_finished[2]),
                    lp %in% input$participants_lp) %>%
             mutate(age = floor(age)) %>%
             count(age) %>%
@@ -17,10 +21,68 @@ server <- function(input, output) {
             theme(panel.grid.major.x = element_blank())
     }, res = 125)
     
+    output$responses_lp_plot <- renderPlot({
+        participants %>%
+            filter(between(age, 
+                           input$participants_age[1], 
+                           input$participants_age[2]),
+                   between(date_finished,
+                           input$participants_date_finished[1],
+                           input$participants_date_finished[2]),
+                   lp %in% input$participants_lp) %>%
+            mutate(lp_three = case_when(
+                doe_catalan >= doe_spanish & lp=="Monolingual" ~ "Catalan monolingual",
+                doe_catalan < doe_spanish & lp=="Monolingual" ~ "Spanish monolingual",
+                .default = "Bilingual"
+            ),
+            lp_three = factor(lp_three,
+                              levels = c("Catalan monolingual",
+                                         "Bilingual",
+                                         "Spanish monolingual"))) |> 
+            pivot_longer(matches("doe_"),
+                         names_to = "language",
+                         values_to = "doe",
+                         names_prefix = "doe_",
+                         names_transform = tools::toTitleCase) |> 
+            ggplot(aes(language, doe,
+                       colour = lp_three,
+                       fill = lp_three)) +
+            facet_wrap(vars(lp_three)) +
+            geom_hline(yintercept = 0.80,
+                       linetype = "dashed") +
+            geom_hline(yintercept = 0.50,
+                       linetype = "dotted",
+                       colour = "grey") +
+            geom_line(aes(group = response_id),
+                      alpha = 1/20) +
+            ggdist::stat_histinterval(aes(side = ifelse(language=="Catalan",
+                                            "left", "right")),
+                                      binwidth = 0.25,
+                                      interval_colour = NA,
+                                      point_color = NA) +
+            # geom_point(position = position_jitter(width = 0.1)) +
+            # geom_text(aes(label = n), size = 3, position = position_nudge(y = 1.5)) +
+            labs(y = "Degree of exposure",
+                 x = "Language of exposure",
+                 colour = "Language profile",
+                 fill = "Language profile") +
+            scale_colour_manual(values = clrs[c(1, 4, 5)]) +
+            scale_fill_manual(values = clrs[c(1, 4, 5)]) +
+            
+            scale_y_continuous(labels = scales::percent) +
+            theme(panel.grid.major.y = element_blank(),
+                  legend.position = "none",
+                  panel.border = element_rect(fill = NA, colour = "grey"))
+    }, res = 125)
+    
     output$responses_date_plot <- renderPlot({
         participants %>%
-            filter(between(age, input$participants_age[1], input$participants_age[2]),
-                   between(date_finished, input$participants_date_finished[1], input$participants_date_finished[2]),
+            filter(between(age, 
+                           input$participants_age[1],
+                           input$participants_age[2]),
+                   between(date_finished,
+                           input$participants_date_finished[1],
+                           input$participants_date_finished[2]),
                    lp %in% input$participants_lp) %>%
             count(date_finished, lp) %>%
             mutate(n = cumsum(n), .by = lp) %>%
@@ -30,9 +92,11 @@ server <- function(input, output) {
                  y = "Number of participants",
                  colour = "Group") +
             scale_colour_manual(values = clrs[c(1, 4, 5)]) +
-            scale_x_date(date_labels = "%Y %b",
+            scale_x_date(date_labels = "%m/%Y",
                          date_breaks = "6 months") +
             theme(legend.position = "top",
+                  panel.grid.major.x = element_line(colour = "grey",
+                                                    linetype = "dotted"),
                   legend.title = element_blank(),
                   legend.key.width = unit(1, "cm"),
                   axis.title.x = element_blank())
@@ -104,7 +168,7 @@ server <- function(input, output) {
             select(te, lv) |> 
             ggplot(aes(lv)) +
             tidybayes::stat_slab(colour = "white",
-                      fill = clrs[2]) +
+                                 fill = clrs[2]) +
             labs(x = "Cognateness (Levenshtein similarity)",
                  y = "Proportion of words") +
             scale_x_continuous(labels = percent) +
@@ -156,7 +220,7 @@ server <- function(input, output) {
                       size = 2.5) +
             labs(x = "Semantic category",
                  y = "Proportion of words") +
-        scale_x_discrete(labels = label_wrap(10)) + 
+            scale_x_discrete(labels = label_wrap(10)) + 
             scale_y_continuous(labels = percent) +
             scale_fill_manual(values = clrs[c(1, 3, 5)]) +
             theme(legend.position = "left",
@@ -179,9 +243,9 @@ server <- function(input, output) {
             select(te, language, label, ipa, lv, class, semantic_category) |> 
             mutate(label = paste0(label, " (/", ipa, "/)")) |> 
             tidyr::pivot_wider(id_cols = c(te, class, semantic_category, lv),
-                        names_from = language,
-                        values_from = label,
-                        names_repair = make_clean_names) |> 
+                               names_from = language,
+                               values_from = label,
+                               names_repair = make_clean_names) |> 
             tidyr::drop_na() |> 
             relocate(te,
                      class,
@@ -330,7 +394,7 @@ server <- function(input, output) {
             filter(lp %in% input$predictions_lp,
                    dominance %in% input$predictions_dominance,
                    .category %in% input$predictions_category,
-                   id %in% input$trajectories_id_id) |>
+                   child_id %in% input$trajectories_id_id) |>
             collect() |> 
             sample_draws(input$trajectories_id_ndraws) |>
             mutate(age = rescale_age(age_std)) |> 

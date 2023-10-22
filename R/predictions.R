@@ -14,7 +14,7 @@ generate_newdata <- function(model,
     if (!is.null(group)) {
         check_arg_group <- group %in% c("te", "child_id") | length(group) > 1
         if (!check_arg_group) {
-            cli::cli_abort("group must be one of 'te' or 'child_id")
+            cli_abort("group must be one of 'te' or 'child_id")
         }
         
         # make sure that all levels exist in the dataset
@@ -22,7 +22,7 @@ generate_newdata <- function(model,
             levels_in_data <- levels %in% data[[group]]
             if (!all(levels_in_data)) {
                 missing_levels <- paste0(levels[!levels_in_data], collapse = ", ")
-                cli::cli_abort("Level {missing_levels} in {.field {group}} is missing")
+                cli_abort("Level {missing_levels} in {.field {group}} is missing")
             }
         } else {
             levels <- unique(data[[group]])
@@ -30,20 +30,26 @@ generate_newdata <- function(model,
         
         if (group == "te") {
             # if group is "te", generate predictions for each level of `te`
-            newdata <- marginaleffects::datagrid(model = model, child_id = NA, te = levels,
+            newdata <- marginaleffects::datagrid(model = model, 
+                                                 child_id = NA,
+                                                 te = levels,
                                       dominance = c("L1", "L2")) |>
             left_join(distinct(data, te), by = join_by(te))
         }
         
         if (group == "child_id") {
             # expand predictor levels in data frame to generate predictions
-            newdata <- marginaleffects::datagrid(model = model, child_id = levels, te = NA,
+            newdata <- marginaleffects::datagrid(model = model,
+                                                 child_id = levels, 
+                                                 te = NA,
                                                  dominance = c("L1", "L2")) |>
                 left_join(distinct(data, child_id, age_std, lp),
                           by = join_by(age_std, lp, child_id))
         }
     } else {
-        newdata <- marginaleffects::datagrid(model = model, te = NA, child_id = NA, ...)
+        newdata <- marginaleffects::datagrid(model = model,
+                                             te = NA,
+                                             child_id = NA, ...)
     }
     
     return(newdata)
@@ -67,7 +73,7 @@ posterior_predictions <- function(model, data, ...) {
         marginaleffects::posteriordraws() |> # so that each draw gets a row
         tibble::as_tibble() |>
         janitor::clean_names() |> 
-        dplyr::filter(group != "No") |> 
+        dplyr::filter(group!="No") |> 
         pivot_wider(id_cols = any_of(c("drawid", colnames(newdata))),
                     names_from = group,
                     values_from = draw) |>
@@ -82,6 +88,7 @@ posterior_predictions <- function(model, data, ...) {
     
     # save predictions as Parquet file
     save_files(predictions, folder = "results/predictions")
+    
     arrow::write_dataset(predictions, 
                          path = "bvq-app/data/predictions",
                          format = "parquet",
@@ -100,7 +107,7 @@ posterior_predictions_re <- function(model, data, group, ...) {
     
     check_arg_group <- group %in% c("child_id", "te")
     if (!check_arg_group) {
-        cli::cli_abort("group must be 'child_id' or 'te'")
+        cli_abort("group must be 'child_id' or 'te'")
     }
     
     # generate data for predictions
@@ -130,24 +137,31 @@ posterior_predictions_re <- function(model, data, group, ...) {
     
     if (group == "te") {
         predictions_te <- predictions
+        
         # export results
         save_files(predictions_te, folder = "results/predictions")
+        
         saveRDS(predictions, "bvq-app/data/predictions_te.rds")
+        
         arrow::write_dataset(predictions_te, 
                              path = "bvq-app/data/predictions_te",
                              format = "parquet",
                              partitioning = "te")
+        
         predictions_re <- predictions_te
     }
     
     if (group == "child_id") {
         predictions_id <- predictions
+        
         # export results
         save_files(predictions_id, folder = "results/predictions")
+        
         arrow::write_dataset(predictions_id, 
                              path = "bvq-app/data/predictions_id",
                              format = "parquet",
                              partitioning = "child_id")
+        
         predictions_re <- predictions_id
     }
     

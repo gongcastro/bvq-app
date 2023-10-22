@@ -2,6 +2,7 @@
 #' @param ... Arguments to be passed to [bvq::bvq_responses()]
 #' @returns A named list of data frames containing questionnaire responses, participant data, and item data from BVQ
 get_bvq <- function(...) {    
+    
     # get participant data
     p <- bvq_participants()
     
@@ -26,15 +27,14 @@ get_bvq <- function(...) {
                # recode it as factor
                edu_parent = factor(edu_parent, levels = 1:6, labels = edu_levels)) |>
         select(child_id, response_id, time, date_finished,
-               age, lp, dominance, edu_parent,
-               version,
+               age, lp, dominance, edu_parent, version,
                doe_catalan, doe_spanish, doe_others)
     
     pool <- bvq::pool |>
         mutate(ipa = ipa::xsampa(xsampa, "ipa"),
-               xsampa = stringr::str_remove_all(xsampa, '\\\"|\\.'),
+               xsampa = gsub('\\\"|\\.', "", xsampa),
                syll = strsplit(ipa, 'ˈ|\\.') |> 
-                   purrr::map(\(x) x[x != ""]))
+                   lapply(\(x) x[x != ""]))
     
     v <- bvq_vocabulary(p, r)
     

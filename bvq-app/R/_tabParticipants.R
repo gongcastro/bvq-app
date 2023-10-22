@@ -30,7 +30,10 @@ tabParticipants <- function() {
                    tabPanel("Age", icon = icon("person-breastfeeding"),
                             plotOutput("responses_age_plot", width = 800, height = 400)),
                    tabPanel("Date", icon = icon("calendar-days"),
-                            plotOutput("responses_date_plot", width = 800, height = 400))
+                            plotOutput("responses_date_plot", width = 800, height = 400)),
+                   tabPanel("Language profile", icon = icon("language"),
+                            plotOutput("responses_lp_plot", width = 800, height = 400))
+                   
                )
         )
     )

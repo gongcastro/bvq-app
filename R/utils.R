@@ -35,7 +35,7 @@ unmake <- function(remove_targets = TRUE,
             }
         }
     })
-    cli::cli_alert_success("Removed project outputs")
+    cli_alert_success("Removed project outputs")
 }
 
 #' Deploy app
@@ -69,9 +69,9 @@ theme_custom <- function() {
 #' @param x Age in months
 #' @param .sep Separator between years and months, ';' by default
 months_to_years <- function(x, .sep = ";") {
-    glue::glue(floor(x %/% 12),
-         floor(x %% 12),
-         .sep = .sep)
+    glue(floor(x %/% 12),
+               floor(x %% 12),
+               .sep = .sep)
 }
 
 #' Transform months to years and months
@@ -79,16 +79,16 @@ months_to_years <- function(x, .sep = ";") {
 #' @param x Time in days
 #' @param .sep Separator between months and days, ';' by default
 days_to_months <- function(x, .sep = ";") {
-    glue::glue(floor(x %/% 30),
-         floor(x %% 30),
-         .sep = .sep)
+    glue(floor(x %/% 30),
+               floor(x %% 30),
+               .sep = .sep)
 }
 
 deploy <- function() {
     rstudioconnect::deployApp("bvq-app",
-              appFileManifest = "bvq-app/manifest.toml",
-              appName = "bvq-app",
-              launch.browser = TRUE)
+                              appFileManifest = "bvq-app/manifest.toml",
+                              appName = "bvq-app",
+                              launch.browser = TRUE)
 }
 
 #' Rescale standardised variable
@@ -194,8 +194,7 @@ get_childes_frequencies <- function(collection = "Eng-NA",
                                 speaker_id)
         
         speakers <- speaker_ids |>
-            left_join(
-                childesr::get_speaker_statistics(collection = collection),
+            left_join(childesr::get_speaker_statistics(collection = collection),
                 by = c("collection_id",
                        "corpus_id", 
                        "speaker_id", 
@@ -212,30 +211,22 @@ get_childes_frequencies <- function(collection = "Eng-NA",
                              "corpus_id",
                              "speaker_id", 
                              "transcript_id")) |>
-            mutate(
-                id = as.character(id),
+            mutate(id = as.character(id),
                 age_months = target_child_age,
                 age_bin = as.integer(floor(age_months / 6) * 6),
-                token = tolower(gloss)
-            ) |>
-            summarise(
-                transcript_count = sum(count),
+                token = tolower(gloss)) |>
+            summarise(transcript_count = sum(count),
                 transcript_num_tokens = sum(num_tokens),
-                .by = c(age_bin, token, target_child_id, transcript_id)
-            ) |>
+                .by = c(age_bin, token, target_child_id, transcript_id)) |>
             filter(between(age_bin,
                            age_range[1],
                            age_range[2])) |>
-            summarise(
-                freq_count = mean(transcript_count),
+            summarise(freq_count = mean(transcript_count),
                 total_count = mean(transcript_num_tokens),
                 n_children = length(unique(target_child_id)),
-                .by = token
-            ) |>
-            mutate(
-                freq_million = freq_count / total_count * 1e6,
-                freq_zipf = log10(freq_million) + 3
-            ) |>
+                .by = token) |>
+            mutate(freq_million = freq_count / total_count * 1e6,
+                freq_zipf = log10(freq_million) + 3) |>
             relocate(token,
                      n_children,
                      freq_count,
@@ -257,13 +248,12 @@ seq_range <- function(x, n) {
         length.out = n)
 }
 
-#' Transform any list column in a dataframe to collapsed character vector
+#' Transform any list column in a data frame to collapsed character vector
 #'
 #' @param x A dataframe
 flatten_columns <- function(x) {
-    mutate_if(x,
-              .predicate = is.list,
-              ~ unlist(map(., ~ paste0(., collapse = ", "))))
+    flatten_col <- \(x) unlist(lapply(x, \(x) paste0(x, collapse = ", ")))
+    mutate(x, across(where(is.list), flatten_col))
 }
 
 #' Save an R object as data or results as Arrow Parquet, CSV, or RDS files
@@ -279,35 +269,33 @@ save_files <- function(x,
                        .sep = "/") {
     # check arguments
     if (!all(formats %in% c("parquet", "csv", "rds"))) {
-        cli::cli_abort("formats must be 'parquet', 'csv' or 'rds'")
+        cli_abort("formats must be 'parquet', 'csv' or 'rds'")
     }
     
     # create directories if missing
-    dirs <-glue::glue("{folder}{.sep}{formats}")
+    dirs <- glue("{folder}{.sep}{formats}")
     dirs_exist <- dir.exists(dirs)
     if (any(!dirs_exist)) {
-        missing_dir <-
-            glue("{folder}{.sep}{formats[which(!dirs_exist)]}{.sep}")
+        missing_dir <- glue("{folder}{.sep}{formats[which(!dirs_exist)]}{.sep}")
         invisible(map(missing_dir, dir.create))
-        cli::cli_alert_warning("Created {.path {missing_dir}}")
+        cli_alert_warning("Created {.path {missing_dir}}")
     }
     
     # save files
-    file_paths <-
-        glue::glue("{folder}{.sep}{formats}{.sep}{file_name}.{formats}")
+    file_paths <- glue("{folder}{.sep}{formats}{.sep}{file_name}.{formats}")
     arrow::write_csv_arrow(flatten_columns(x), file_paths[grepl(".parquet", file_paths)])
     arrow::write_parquet(flatten_columns(x), file_paths[grepl(".csv", file_paths)])
     saveRDS(x, file_paths[grepl(".rds", file_paths)])
-    cli::cli_alert_success("Saved to {.path {folder}}")
+    cli_alert_success("Saved to {.path {folder}}")
 }
 
 remove_nul <- function() {
     paths <- c("manuscript", "docs")
     cur_path <- gsub("/", "\\\\", getwd())
-    nul_path <- glue::glue("{cur_path}\\{paths}\\NUL.")
+    nul_path <- glue("{cur_path}\\{paths}\\NUL.")
     file.exists(nul_path)
-    cmd1 <- glue::glue("rename \\\\.\\{nul_path} delete.txt")
-    cmd2 <- glue::glue("del \\\\.\\{nul_path}\\delete.txt")
+    cmd1 <- glue("rename \\\\.\\{nul_path} delete.txt")
+    cmd2 <- glue("del \\\\.\\{nul_path}\\delete.txt")
     lapply(cmd1, shell)
     lapply(cmd2, shell)
     shell(cmd2)
