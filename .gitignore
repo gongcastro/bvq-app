@@ -40,7 +40,8 @@ vignettes/*.pdf
 
 # data and results
 bvq-app/data/
-results/posterior/csv/*.csv
+results/**/*.csv
+results/**/*.rds
 
 results/posterior/csv/*.csv
 results/posterior/parquet/*.parquet
