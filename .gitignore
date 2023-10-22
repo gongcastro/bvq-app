@@ -42,8 +42,8 @@ vignettes/*.pdf
 bvq-app/data/
 results/**/*.csv
 results/**/*.rds
-results/predictions/predictions.csv
-results/predictions/predictions.rds
+results/predictions/csv/predictions.csv
+results/predictions/rds/predictions.rds
 
 results/posterior/csv/*.csv
 results/posterior/parquet/*.parquet
