@@ -30,8 +30,9 @@ generate_newdata <- function(model,
         
         if (group == "te") {
             # if group is "te", generate predictions for each level of `te`
-            left_join(distinct(data, te),
-                      by = join_by(te))
+            newdata <- marginaleffects::datagrid(model = model, child_id = NA, te = levels,
+                                      dominance = c("L1", "L2")) |>
+            left_join(distinct(data, te), by = join_by(te))
         }
         
         if (group == "child_id") {

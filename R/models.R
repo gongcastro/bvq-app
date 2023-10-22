@@ -38,7 +38,7 @@ get_posterior_draws <- function(model, data, ...) {
     str_repl <- c(
         "b_Intercept[1]" = "Comprehension and Production",
         "b_Intercept[2]" = "Comprehension",
-        "b_age_std" = glue("Age (+1 SD, {round(sd(data$age, na.rm = TRUE), 2)} months)"),
+        "b_age_std" = glue::glue("Age (+1 SD, {round(sd(data$age, na.rm = TRUE), 2)} months)"),
         "b_lp1" = "Group (Monolingual vs. Bilingual)",
         "b_dominance1" = "Dominance (L1 vs. L2)",
         "b_lp1:dominance1" = "Group \u00d7 Dominance"
@@ -61,18 +61,16 @@ get_posterior_draws <- function(model, data, ...) {
                                .variable
             )
         ) |>
-        select(
-            variable = .variable, .variable_name, .type = type,
-            .chain, .iteration, .draw, .value
+        select(variable = .variable, .variable_name, .type = type,
+               .chain, .iteration, .draw, .value
         ) |>
         ungroup()
     
     # export draws
     save_files(posterior, folder = "results/posterior")
-    write_dataset(posterior,
-                  path = "bvq-app/data/posterior",
-                  format = "parquet",
-                  partitioning = "variable"
+    arrow::write_dataset(posterior,
+                         path = "bvq-app/data/posterior",
+                         format = "parquet"
     )
     
     return(posterior)

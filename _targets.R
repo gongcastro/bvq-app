@@ -136,9 +136,9 @@ list(
     
     
     # R-hat (aka. Gelman-Rubin statistic)
-    tar_target(model_rhats, map(lst(model_fit), rhat)),
+    tar_target(model_rhats, purrr::map(lst(model_fit), rhat)),
     # effective sample size
-    tar_target(model_neffs, map(lst(model_fit), neff_ratio)),
+    tar_target(model_neffs, purrr::map(lst(model_fit), neff_ratio)),
     
     # # posterior predictive checks
     # tar_target(
