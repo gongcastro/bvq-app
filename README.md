@@ -1,13 +1,13 @@
 # bvq-app <a href="gongcastro.github.io/bvqdev"><img src="bvq-app/www/logo.png" align="right" height="139" /></a>
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/gongcastro/bvq/actions/workflows/check-standard.yaml/badge.svg)](https://github.com/gongcastro/bvq/actions/workflows/R-CMD-check.yaml)
-[![Codecov test coverage](https://codecov.io/gh/gongcastro/bvqdev/branch/main/graph/badge.svg)](https://app.codecov.io/gh/gongcastro/bvqdev?branch=main)
+[![Codecov test coverage](https://codecov.io/gh/gongcastro/bvqdev/branch/main/graph/badge.svg)](https://app.codecov.io/gh/gongcastro/bvq?branch=main)
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
-![GitHub issues](https://img.shields.io/github/issues/gongcastro/bvqdev)
+![GitHub issues](https://img.shields.io/github/issues/gongcastro/bvq)
 <!-- badges: end -->
 
 
-The Barcelona Vocabulary Questionnaire (BVQ) is an online tools developed by researchers from the Laboratori de Recerca en Infància at the Universitat Pompeu Fabra (Barcelona, Spain) aimed at assessing the developing mental lexicon of  bilingual infants and toddlers living in the Metropolitan Area of Barcelona. The BVQ Shiny app provides a visual inteface to the [{bvq}](https://github.com/gongcastro/bvqdev) R package to explore the database. This repository contains the data, documentation, and R scripts needed to run the BVQ Shiny app.
+The Barcelona Vocabulary Questionnaire (BVQ) is an online tools developed by researchers from the Laboratori de Recerca en Infància at the Universitat Pompeu Fabra (Barcelona, Spain) aimed at assessing the developing mental lexicon of  bilingual infants and toddlers living in the Metropolitan Area of Barcelona. The BVQ Shiny app provides a visual inteface to the [{bvq}](https://github.com/gongcastro/bvq) R package to explore the database. This repository contains the data, documentation, and R scripts needed to run the BVQ Shiny app.
 
 # Running the app
 
